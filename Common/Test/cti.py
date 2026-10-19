@@ -359,9 +359,9 @@ class cti(unittest.TestCase):
             if text in result:
                 break
 
-    def check_dash_v(self, prog, with_w=False, check_tls=True):
+    def check_dash_v(self, prog, with_w=False, check_tls=True, env=None):
         '''Make sure the "-v" option works'''
-        p = Popen([prog, '-v'], stderr=PIPE)
+        p = Popen([prog, '-v'], stderr=PIPE, env=env)
         stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
         p.wait(timeout=2)
         vprog = 'w' + prog if with_w else prog
@@ -370,20 +370,20 @@ class cti(unittest.TestCase):
         if check_tls:
             self.assertTrue(any('TLS provider: ' in line for line in stderr), 'TLS provider not found')
 
-    def check_help(self, prog):
+    def check_help(self, prog, env=None):
         '''Make sure the "--help" option works'''
-        p = Popen([prog, '--help'], stderr=PIPE)
+        p = Popen([prog, '--help'], stderr=PIPE, env=env)
         stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
         p.wait(timeout=2)
         self.assertTrue(stderr[0].startswith('Usage: ' + prog + ' '), '--help does not start with Usage')
 
-    def check_bad(self, prog, extra=None):
+    def check_bad(self, prog, extra=None, env=None):
         '''Make sure a bad option fails'''
         args = [prog]
         if extra != None:
             args.append(extra)
         args.append('-foo')
-        p = Popen(args, stderr=PIPE)
+        p = Popen(args, stderr=PIPE, env=env)
         stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
         rc = p.wait(timeout=2)
         self.assertNotEqual(0, rc, 'program should fail')
@@ -391,13 +391,13 @@ class cti(unittest.TestCase):
         self.assertTrue(any(line.startswith('Usage: ') for line in stderr), 'Missing Usage message')
         self.assertTrue(any('Use --help' in line for line in stderr), 'Missing --help prompt')
 
-    def check_bad2(self, prog, extra=None):
+    def check_bad2(self, prog, extra=None, env=None):
         '''Make sure many bad options fail'''
         args = [prog]
         if extra != None:
             args.append(extra)
         args += ['-foo', '-bar', '-baz']
-        p = Popen(args, stderr=PIPE)
+        p = Popen(args, stderr=PIPE, env=env)
         stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
         rc = p.wait(timeout=2)
         self.assertNotEqual(0, rc, 'Program should fail')
@@ -405,13 +405,13 @@ class cti(unittest.TestCase):
         self.assertTrue(any(line.startswith('Usage: ') for line in stderr), 'Missing Usage message')
         self.assertTrue(any('Use --help' in line for line in stderr), 'Missing --help prompt')
 
-    def check_toomany(self, prog, extra=None):
+    def check_toomany(self, prog, extra=None, env=None):
         '''Make sure too many command-line options fail'''
         args = [prog]
         if extra != None:
             args.append(extra)
         args += ['able', 'baker', 'charlie']
-        p = Popen(args, stderr=PIPE)
+        p = Popen(args, stderr=PIPE, env=env)
         stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
         rc = p.wait(timeout=2)
         self.assertNotEqual(0, rc, 'Program should fail')
@@ -419,10 +419,10 @@ class cti(unittest.TestCase):
         self.assertTrue(any(line.startswith('Usage: ') for line in stderr), 'Missing Usage message')
         self.assertTrue(any('Use --help' in line for line in stderr), 'Missing --help prompt')
 
-    def check_toofew(self, prog):
+    def check_toofew(self, prog, env=None):
         '''Make sure too few command-line options fail'''
         args = [prog]
-        p = Popen(args, stderr=PIPE)
+        p = Popen(args, stderr=PIPE, env=env)
         stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
         rc = p.wait(timeout=2)
         self.assertNotEqual(0, rc, 'Program should fail')
@@ -430,13 +430,13 @@ class cti(unittest.TestCase):
         self.assertTrue(any(line.startswith('Usage: ') for line in stderr), 'Missing Usage message')
         self.assertTrue(any('Use --help' in line for line in stderr), 'Missing --help prompt')
 
-    def check_incomplete(self, prog, extra=None):
+    def check_incomplete(self, prog, extra=None, env=None):
         '''Make sure an incomplete option fails'''
         args = [prog]
         if extra != None:
             args.append(extra)
         args.append('-codepage')
-        p = Popen(args, stderr=PIPE)
+        p = Popen(args, stderr=PIPE, env=env)
         stderr = p.communicate(timeout=2)[1].decode('utf8').split('\n')
         rc = p.wait(timeout=2)
         self.assertNotEqual(0, rc, 'Program should fail')

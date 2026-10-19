@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2024 Paul Mattes.
+ * Copyright (c) 1995-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,3 +36,6 @@ void MoveCursor_xaction(Widget w, XEvent *event, String *params, Cardinal *num_p
 void MoveCursor1_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params);
 void PA_Shift_xaction(Widget w, XEvent *event, String *params, Cardinal *num_params);
 void xkybd_register(void);
+void mod_init(void);
+unsigned int xkybd_alt_mask(void);
+unsigned int xkybd_meta_mask(void);

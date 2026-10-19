@@ -658,13 +658,17 @@ tilde_subst(const char *s)
 
     /* Look it up. */
     if (!strcmp(name, "~")) {	/* this user */
+	char *env_home = getenv("HOME");
+
+	if (appres.ut_env && env_home != NULL) {
+	    /* $HOME overides using getpwuid. */
+	    r = Asprintf("%s/%s", env_home, rest);
+	    goto done;
+	}
 	p = getpwuid(getuid());
     } else {			/* somebody else */
 	p = getpwnam(name + 1);
     }
-
-    /* Free any temporary copy. */
-    Free(mname);
 
     /* Substitute and return. */
     if (p == NULL) {
@@ -674,6 +678,10 @@ tilde_subst(const char *s)
 	strcpy(r, p->pw_dir);
 	strcat(r, rest);
     }
+
+done:
+    /* Free any temporary copy. */
+    Free(mname);
     return r;
 }
 #else /*][*/

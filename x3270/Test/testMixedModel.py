@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,35 +27,25 @@
 #
 # x3270 mixed-case model and oversize tests
 
-import os
-import shutil
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
 
 from Common.Test.cti import *
-import Common.Test.playback as playback
-import x3270.Test.tvs as tvs
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
-@unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
 @requests_timeout
 class TestX3270MixedModel(cti):
 
     # x3270 mixed-case model test
     def test_x3270_mixed_case_model(self):
 
-        # Start a tightvnc server.
-        with tvs.tightvncserver(self):
-
-            # Set up the fonts.
-            obj = os.path.abspath(os.path.split(shutil.which('x3270'))[0])
-            self.assertEqual(0, os.system(f'mkfontdir {obj}'))
-            self.assertEqual(0, os.system(f'DISPLAY=:2 xset +fp {obj}/'))
-            self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self, need_fonts=True) as v:
 
             # Start x3270 with a mixed-case IBM- model on the command line.
             port, ts = unused_port()
-            x3270 = Popen(vgwrap(['x3270', '-display', ':2', '-httpd', f'{port}', '-model', 'iBm-3279-2']))
+            x3270 = Popen(vgwrap(['x3270', '-httpd', f'{port}', '-model', 'iBm-3279-2', '-utenv']), env=v.Env)
             self.children.append(x3270)
             self.check_listen(port)
             ts.close()
@@ -82,18 +72,12 @@ class TestX3270MixedModel(cti):
     # x3270 mixed-case overize test
     def test_x3270_mixed_case_oversize(self):
 
-        # Start a tightvnc server.
-        with tvs.tightvncserver(self):
-
-            # Set up the fonts.
-            obj = os.path.abspath(os.path.split(shutil.which('x3270'))[0])
-            self.assertEqual(0, os.system(f'mkfontdir {obj}'))
-            self.assertEqual(0, os.system(f'DISPLAY=:2 xset +fp {obj}/'))
-            self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self, need_fonts=True) as v:
 
             # Start x3270 with an uppercase and leading-zero oversize on the command line.
             port, ts = unused_port()
-            x3270 = Popen(vgwrap(['x3270', '-display', ':2', '-httpd', f'{port}', '-oversize', '0100X100']))
+            x3270 = Popen(vgwrap(['x3270', '-httpd', f'{port}', '-oversize', '0100X100', '-utenv']), env=v.Env)
             self.children.append(x3270)
             self.check_listen(port)
             ts.close()

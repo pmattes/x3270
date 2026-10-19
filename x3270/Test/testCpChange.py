@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,39 +28,29 @@
 # x3270 code page change test
 
 import os
-import shutil
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, DEVNULL
 import tempfile
 import time
 import unittest
 
 from Common.Test.cti import *
-import x3270.Test.tvs as tvs
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
-@unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
-@unittest.skipIf(os.system('import -h 2>/dev/null') != 256, "ImageMagick needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
+@unittest.skipIf(os.system('import -h 2>/dev/null') != 256, 'ImageMagick needed for tests')
 @requests_timeout
 class TestX3270CpChange(cti):
 
     # x3270 code page change test
     def test_x3270_codepage_change(self):
 
-        # Start a tightvnc server.
-        with tvs.tightvncserver(self):
-
-            obj = os.path.abspath(os.path.split(shutil.which('x3270'))[0])
-            self.assertEqual(0, os.system(f'mkfontdir {obj}'))
-            self.assertEqual(0, os.system(f'DISPLAY=:2 xset +fp {obj}/'))
-            self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self, need_fonts=True) as v:
 
             # Start x3270.
             x3270_port, ts = unused_port()
-            env = os.environ.copy()
-            env['DISPLAY'] = ':2'
-            x3270 = Popen(vgwrap(["x3270",
-                "-httpd", f"127.0.0.1:{x3270_port}",
-                "-efont", "3270-12"]), stdout=DEVNULL, env=env)
+            x3270 = Popen(vgwrap(['x3270', '-httpd', f'127.0.0.1:{x3270_port}', '-utenv',
+                                  '-efont', '3270-12']), stdout=DEVNULL, env=v.Env)
             self.children.append(x3270)
             self.check_listen(x3270_port)
             ts.close()
@@ -72,7 +62,7 @@ class TestX3270CpChange(cti):
             # Dump the window contents.
             (handle, name1) = tempfile.mkstemp(suffix='.bmp')
             os.close(handle)
-            self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name1}"'))
+            self.assertEqual(0, os.system(f'import -display {v.Display} -window {wid} "{name1}"'))
 
             # Change the code page.
             r = self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Set(codepage,cp275)')
@@ -81,7 +71,7 @@ class TestX3270CpChange(cti):
             # Dump the window contents again.
             (handle, name2) = tempfile.mkstemp(suffix='.bmp')
             os.close(handle)
-            self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name2}"'))
+            self.assertEqual(0, os.system(f'import -display {v.Display} -window {wid} "{name2}"'))
 
             # Wait for the process to exit.
             self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')

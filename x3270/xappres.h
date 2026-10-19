@@ -57,6 +57,7 @@ typedef struct {
     Boolean	 xquartz_hack;
     Boolean	 maximize;
     Boolean	 fullscreen;
+    Boolean	 upshift_caps;
     char	*keypad;
     char	*efontname;
     char	*fixed_size;

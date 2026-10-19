@@ -4527,14 +4527,14 @@ PA_EnterLeave_xaction(Widget w _is_unused, XEvent *event _is_unused,
     }
 }
 
+/*
+ * This was formerly an action that handled certain Shift/Meta/Alt transitions.
+ * It is a no-op now, present in case someone is using it in an old keymap.
+ */
 void
 PA_KeymapNotify_xaction(Widget w _is_unused, XEvent *event,
 	String *params _is_unused, Cardinal *num_params _is_unused)
 {
-    XKeymapEvent *k = (XKeymapEvent *)event;
-
-    xaction_debug(PA_KeymapNotify_xaction, event, params, num_params);
-    shift_event(state_from_keymap(k->key_vector));
 }
 
 static void
@@ -4638,16 +4638,14 @@ PA_StateChanged_xaction(Widget w _is_unused, XEvent *event, String *params,
 }
 
 /*
- * Handle Shift events (KeyPress and KeyRelease events, or KeymapNotify events
- * that occur when the mouse enters the window).
+ * Handle Shift events: when the state of Shift, Alt, Meta or CapsLock changes.
  */
-
 void
 shift_event(int event_state)
 {
     static int old_state;
     bool shifted_now =
-	(event_state & (ShiftKeyDown | MetaKeyDown | AltKeyDown)) != 0;
+	(event_state & (ShiftKeyDown | MetaKeyDown | AltKeyDown | CapsLock)) != 0;
 
     if (event_state != old_state) {
 	old_state = event_state;

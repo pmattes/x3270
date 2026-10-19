@@ -31,74 +31,83 @@ from subprocess import Popen, DEVNULL
 import unittest
 
 from Common.Test.cti import *
-from Common.Test.playback import playback
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
 @requests_timeout
 class TestX3270Query(cti):
 
     # x3270 Query() test for window-specific items.
     def test_x3270_query_window(self):
-        # Start x3270.
-        http_port, ts = unused_port()
-        x3270 = Popen(vgwrap(['x3270', '-httpd', f'127.0.0.1:{http_port}']), stdin=DEVNULL, stdout=DEVNULL)
-        self.children.append(x3270)
-        ts.close()
-        self.check_listen(http_port)
 
-        q_window = ['CharacterPixels', 'DisplayPixels', 'WindowLocation', 'WindowPixels', 'WindowState', 'WindowId']
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
-        # Query everything and make sure it includes all the window items.
-        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query()')
-        result = r.json()['result']
-        for query in q_window:
-            matches = [qline for qline in result if query in qline]
-            self.assertEqual(1, len(matches), f'expected {query}')
-            s = matches[0].split()
-            match (query):
-                case 'CharacterPixels':
-                    self.assertNotEqual([0, 0], [s[0], s[4]])
-                case 'DisplayPixels':
-                    self.assertNotEqual([0, 0], [s[0], s[4]])
-                case 'WindowPixels':
-                    self.assertNotEqual([0, 0], [s[0], s[4]])
-                case 'WindowState':
-                    self.assertEqual('normal',s[1])
-                    pass
-                case 'WidowLocation':
-                    pass
-                case 'WindowId':
-                    self.assertNotEqual(0, int(s[1], base=16))
-                    pass
+            # Start x3270.
+            http_port, ts = unused_port()
+            x3270 = Popen(vgwrap(['x3270', '-httpd', f'127.0.0.1:{http_port}', '-utenv']), stdin=DEVNULL, stdout=DEVNULL, env=v.Env)
+            self.children.append(x3270)
+            ts.close()
+            self.check_listen(http_port)
+
+            q_window = ['CharacterPixels', 'DisplayPixels', 'WindowLocation', 'WindowPixels', 'WindowState', 'WindowId']
+
+            # Query everything and make sure it includes all the window items.
+            r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query()')
+            result = r.json()['result']
+            for query in q_window:
+                matches = [qline for qline in result if query in qline]
+                self.assertEqual(1, len(matches), f'expected {query}')
+                s = matches[0].split()
+                match (query):
+                    case 'CharacterPixels':
+                        self.assertNotEqual([0, 0], [s[0], s[4]])
+                    case 'DisplayPixels':
+                        self.assertNotEqual([0, 0], [s[0], s[4]])
+                    case 'WindowPixels':
+                        self.assertNotEqual([0, 0], [s[0], s[4]])
+                    case 'WindowState':
+                        self.assertEqual('normal',s[1])
+                        pass
+                    case 'WidowLocation':
+                        pass
+                    case 'WindowId':
+                        self.assertNotEqual(0, int(s[1], base=16))
+                        pass
 
 
-        # Stop x3270.
-        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
+            # Stop x3270.
+            self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
 
-        # Wait for the process to exit.
-        self.vgwait(x3270)
+            # Wait for the process to exit.
+            self.vgwait(x3270)
 
     # x3270 Query(CommandLine) test.
     def test_x3270_query_command_line(self):
-        # Start x3270.
-        http_port, ts = unused_port()
-        x3270 = Popen(vgwrap(['x3270', '-httpd', f'127.0.0.1:{http_port}', '-user', 'x \x01y\nz']), stdin=DEVNULL, stdout=DEVNULL)
-        self.children.append(x3270)
-        ts.close()
-        self.check_listen(http_port)
 
-        # Query the command line.
-        r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(CommandLine)')
-        self.assertTrue(r.ok)
-        result = r.json()['result'][0]
-        ew = f' -httpd 127.0.0.1:{http_port} -user "x ^Ay^Jz"'
-        self.assertTrue(result.endswith(ew))
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
-        # Stop s3270.
-        self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
+            # Start x3270.
+            http_port, ts = unused_port()
+            x3270 = Popen(vgwrap(['x3270', '-utenv', '-httpd', f'127.0.0.1:{http_port}', '-user', 'x \x01y\nz']),
+                          stdin=DEVNULL, stdout=DEVNULL, env=v.Env)
+            self.children.append(x3270)
+            ts.close()
+            self.check_listen(http_port)
 
-        # Wait for the process to exit.
-        self.vgwait(x3270)
+            # Query the command line.
+            r = self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Query(CommandLine)')
+            self.assertTrue(r.ok)
+            result = r.json()['result'][0]
+            ew = f' -httpd 127.0.0.1:{http_port} -user "x ^Ay^Jz"'
+            self.assertTrue(result.endswith(ew))
+
+            # Stop s3270.
+            self.get(f'http://127.0.0.1:{http_port}/3270/rest/json/Quit(-force))')
+
+            # Wait for the process to exit.
+            self.vgwait(x3270)
 
 if __name__ == '__main__':
     unittest.main()

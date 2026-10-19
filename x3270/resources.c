@@ -299,6 +299,8 @@ XtResource xresources[] = {
       offset(fullscreen), XtRString, "false" },
     { ResMaximize, ClsMaximize, XtRBoolean, sizeof(Boolean),
       offset(maximize), XtRString, "false" },
+    { ResUpshiftCaps, ClsUpshiftCaps, XtRBoolean, sizeof(Boolean),
+      offset(upshift_caps), XtRString, "true" },
 
 #if defined(USE_APP_DEFAULTS) /*[*/
     { ResAdVersion, ClsAdVersion, XtRString, sizeof(char *),

@@ -46,7 +46,7 @@ FONTS = 3270-12.pcf.gz 3270-12b.pcf.gz 3270-20.pcf.gz 3270-20b.pcf.gz \
 ICONS = x3270-192x192.png x3270-256x256.png x3270-48x48.png \
 	x3270-512x512.png x3270-96x96.png
 
-all: x3270 x3270a x3270.desktop $(FONTS) $(ICONS) dryrun
+all: x3270 x3270a x3270.desktop $(FONTS) fonts.dir $(ICONS) dryrun
 
 LIBDIR = @libdir@
 prefix = @prefix@
@@ -87,6 +87,9 @@ x3270: $(OBJS1) $(DEP3270) $(DEP3270I) $(DEP32XX) $(DEP3270STUBS)
 
 %.pcf.gz: %.bdf
 	bdftopcf $< | gzip -n9 >$@
+
+fonts.dir: $(FONTS)
+	mkfontdir .
 
 %.png: %.png.in
 	cp $< $@

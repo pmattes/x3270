@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1995-2025 Paul Mattes.
+ * Copyright (c) 1995-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -66,7 +66,6 @@ void kybd_send_data(void);
 int kybd_prime(void);
 void kybd_scroll_lock(bool lock);
 bool run_ta(void);
-int state_from_keymap(char keymap[32]);
 void lightpen_select(int baddr);
 void key_UCharacter(ucs4_t ucs4, enum keytype keytype, enum iaction cause,
 	bool fail);

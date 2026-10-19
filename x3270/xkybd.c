@@ -63,6 +63,9 @@
 #include "xscreen.h"
 #include "xselectc.h"
 
+enum save_ix { IX_ALT, IX_META };
+static unsigned int save_mask[2];
+
 /*
  * Handle an ordinary character key, given its NULL-terminated multibyte
  * representation.
@@ -238,63 +241,92 @@ xim_lookup(XKeyEvent *event)
  * X-dependent code starts here.
  */
 
-/*
- * Translate a keymap (from an XQueryKeymap or a KeymapNotify event) into
- * a bitmap of Shift, Meta or Alt keys pressed.
+/**
+ * Initialilze the mapping from virtual modifiers (Alt, Meta) to real modifiers
+ * (Mod1, Mod2, etc.).
  */
-#define key_is_down(kc, bitmap) (kc && ((bitmap)[(kc)/8] & (1<<((kc)%8))))
-int
-state_from_keymap(char keymap[32])
+void
+mod_init(void)
 {
-    static bool initted = false;
-    static KeyCode kc_Shift_L, kc_Shift_R;
-    static KeyCode kc_Meta_L, kc_Meta_R;
-    static KeyCode kc_Alt_L, kc_Alt_R;
-    int	pseudo_state = 0;
+    XModifierKeymap *mm;
+    int mod, key;
 
-    if (!initted) {
-	kc_Shift_L = XKeysymToKeycode(display, XK_Shift_L);
-	kc_Shift_R = XKeysymToKeycode(display, XK_Shift_R);
-	kc_Meta_L  = XKeysymToKeycode(display, XK_Meta_L);
-	kc_Meta_R  = XKeysymToKeycode(display, XK_Meta_R);
-	kc_Alt_L   = XKeysymToKeycode(display, XK_Alt_L);
-	kc_Alt_R   = XKeysymToKeycode(display, XK_Alt_R);
-	initted = true;
+    mm = XGetModifierMapping(display);
+    if (mm == NULL) {
+        Error("Cannot retrieve the X modifier map");
+        return;
     }
-    if (key_is_down(kc_Shift_L, keymap) || key_is_down(kc_Shift_R, keymap)) {
-	pseudo_state |= ShiftKeyDown;
+
+    for (mod = 0; mod < 8; mod++) {
+        unsigned int mask = 1U << mod;
+
+        for (key = 0; key < mm->max_keypermod; key++) {
+            KeyCode keycode;
+            KeySym *keysyms;
+            int keysyms_per_keycode;
+            int i;
+
+            keycode = mm->modifiermap[mod * mm->max_keypermod + key];
+            if (keycode == 0) {
+                continue;
+            }
+
+            keysyms = XGetKeyboardMapping(display, keycode, 1,
+                    &keysyms_per_keycode);
+            if (keysyms == NULL) {
+                continue;
+            }
+
+            for (i = 0; i < keysyms_per_keycode; i++) {
+                switch (keysyms[i]) {
+                case XK_Alt_L:
+                case XK_Alt_R:
+                    save_mask[IX_ALT] |= mask;
+                    break;
+                case XK_Meta_L:
+                case XK_Meta_R:
+                    save_mask[IX_META] |= mask;
+                    break;
+                default:
+                    break;
+                }
+            }
+            XFree(keysyms);
+        }
     }
-    if (key_is_down(kc_Meta_L, keymap) || key_is_down(kc_Meta_R, keymap)) {
-	pseudo_state |= MetaKeyDown;
-    }
-    if (key_is_down(kc_Alt_L, keymap) || key_is_down(kc_Alt_R, keymap)) {
-	pseudo_state |= AltKeyDown;
-    }
-    return pseudo_state;
+
+    XFreeModifiermap(mm);
 }
-#undef key_is_down
+
+/**
+ * Fetch the modifier mask for Alt.
+ * @returns Alt mask, or 0.
+ */
+unsigned int
+xkybd_alt_mask(void)
+{
+    return save_mask[IX_ALT];
+}
+
+/**
+ * Fetch the modifier mask for Meta.
+ * @returns Meta mask, or 0.
+ */
+unsigned int
+xkybd_meta_mask(void)
+{
+    return save_mask[IX_META];
+}
 
 /*
- * Process shift keyboard events.  The code has to look for the raw Shift keys,
- * rather than using the handy "state" field in the event structure.  This is
- * because the event state is the state _before_ the key was pressed or
- * released.  This isn't enough information to distinguish between "left
- * shift released" and "left shift released, right shift still held down"
- * events, for example.
- *
- * This function is also called as part of Focus event processing.
+ * This is a no-op, but it is still needed so x3270 gets an X event when
+ * the state of Shift, Alt or Meta changes.
  */
 void
 PA_Shift_xaction(Widget w _is_unused, XEvent *event _is_unused,
 	String *params _is_unused, Cardinal *num_params _is_unused)
 {
-    char keys[32];
-
-#if defined(INTERNAL_ACTION_DEBUG) /*[*/
     xaction_debug(PA_Shift_xaction, event, params, num_params);
-#endif /*]*/
-    XQueryKeymap(display, keys);
-    shift_event(state_from_keymap(keys));
 }
 
 /*

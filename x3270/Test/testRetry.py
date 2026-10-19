@@ -30,20 +30,20 @@
 import os
 import shutil
 from subprocess import Popen, PIPE, DEVNULL
-import time
 import unittest
 
 from Common.Test.cti import *
 from Common.Test.playback import playback
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
 @unittest.skipUnless(shutil.which('xdotool') != None, 'Need xdotool')
 @requests_timeout
 class TestX3270Retry(cti):
 
     # Wait for the Connection Error pop-up to appear.
-    def find_popup(self) -> str:
-        xdotool = Popen(['xdotool', 'search', '--onlyvisible', '--name', 'x3270 Error'], stdout=PIPE, stderr=DEVNULL)
+    def find_popup(self, env: dict[str, str]) -> str:
+        xdotool = Popen(['xdotool', 'search', '--onlyvisible', '--name', 'x3270 Error'], stdout=PIPE, stderr=DEVNULL, env=env)
         out = xdotool.communicate()[0].decode('utf8').strip().split()
         xdotool.wait(2)
         return out
@@ -51,65 +51,73 @@ class TestX3270Retry(cti):
     # x3270 retry cancel test
     def test_x3270_retry_cancel(self):
 
-        # Find an unused port, but do not listen on it yet.
-        playback_port, pts = unused_port()
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
-        # Start x3270.
-        hport, hts = unused_port()
-        hts.close()
-        x3270 = Popen(vgwrap(['x3270', '-set', 'retry', '-httpd', str(hport), f'127.0.0.1:{playback_port}']))
-        self.children.append(x3270)
+            # Find an unused port, but do not listen on it yet.
+            playback_port, pts = unused_port()
 
-        # Wait for the Connection Error pop-up to appear.
-        self.try_until(lambda: self.find_popup() != [], 4, 'Connect error pop-up did not appear')
+            # Start x3270.
+            hport, hts = unused_port()
+            hts.close()
+            x3270 = Popen(vgwrap(['x3270', '-set', 'retry', '-httpd', str(hport), '-utenv',
+                                  f'127.0.0.1:{playback_port}']), env=v.Env)
+            self.children.append(x3270)
 
-        # Make it stop.
-        ids = self.find_popup()
-        id = ids[0] if len(ids) == 1 else ids[1]
-        os.system(f'xdotool windowfocus --sync {id} mousemove --window {id} 42 83 click 1')
+            # Wait for the Connection Error pop-up to appear.
+            self.try_until(lambda: self.find_popup(v.Env) != [], 4, 'Connect error pop-up did not appear')
 
-        # Verify that x3270 is no longer reconnecting.
-        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/printtext string oia').json()['result']
-        self.assertEqual('X Not Connected', r[-1][7:22])
+            # Make it stop.
+            ids = self.find_popup(v.Env)
+            id = ids[0] if len(ids) == 1 else ids[1]
+            os.system(f'DISPLAY={v.Display} xdotool windowfocus --sync {id} mousemove --window {id} 42 83 click 1')
 
-        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
-        self.vgwait(x3270)
-        pts.close()
+            # Verify that x3270 is no longer reconnecting.
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/printtext string oia').json()['result']
+            self.assertEqual('X Not Connected', r[-1][7:22])
+
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
+            self.vgwait(x3270)
+            pts.close()
 
     # x3270 retry succeed test
     def test_x3270_retry_succeed_5s(self):
 
-        # Find an unused port, but do not listen on it yet.
-        playback_port, pts = unused_port()
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
-        # Start x3270.
-        hport, hts = unused_port()
-        hts.close()
-        x3270 = Popen(vgwrap(['x3270', '-set', 'retry', '-httpd', str(hport), f'127.0.0.1:{playback_port}']))
-        self.children.append(x3270)
+            # Find an unused port, but do not listen on it yet.
+            playback_port, pts = unused_port()
 
-        # Wait for the Connection Error pop-up to appear.
-        self.try_until(lambda: self.find_popup != [], 4, 'Connect error pop-up did not appear')
+            # Start x3270.
+            hport, hts = unused_port()
+            hts.close()
+            x3270 = Popen(vgwrap(['x3270', '-set', 'retry', '-httpd', str(hport), '-utenv',
+                                  f'127.0.0.1:{playback_port}']), env=v.Env)
+            self.children.append(x3270)
 
-        # Start playback to accept the connection.
-        with playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
+            # Wait for the Connection Error pop-up to appear.
+            self.try_until(lambda: self.find_popup(v.Env) != [], 4, 'Connect error pop-up did not appear')
+
+            # Start playback to accept the connection.
+            with playback(self, 'c3270/Test/ibmlink2.trc', port=playback_port) as p:
+                pts.close()
+
+                # Wait for x3270 to connect.
+                p.wait_accept(timeout=6)
+
+                # Wait for the status to update.
+                def connected():
+                    r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/query host').json()['result'][0]
+                    return r == f'host 127.0.0.1 {playback_port}'
+                self.try_until(connected, 2, 'x3270 did not connect')
+
+                # Make sure the pop-up has popped itself down.
+                self.assertFalse(self.find_popup(v.Env))
+
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
+            self.vgwait(x3270)
             pts.close()
-
-            # Wait for x3270 to connect.
-            p.wait_accept(timeout=6)
-
-            # Wait for the status to update.
-            def connected():
-                r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/query host').json()['result'][0]
-                return r == f'host 127.0.0.1 {playback_port}'
-            self.try_until(connected, 2, 'x3270 did not connect')
-
-            # Make sure the pop-up has popped itself down.
-            self.assertFalse(self.find_popup())
-
-        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
-        self.vgwait(x3270)
-        pts.close()
 
 if __name__ == '__main__':
     unittest.main()

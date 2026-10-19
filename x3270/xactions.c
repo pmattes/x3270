@@ -443,6 +443,9 @@ learn_modifiers(void)
 	    case XK_Hyper_R:
 		name = "Hyper";
 		break;
+	    case XK_Num_Lock:
+		name = "Num_Lock";
+		break;
 	    default:
 		break;
 	    }

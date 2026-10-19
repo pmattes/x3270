@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,14 +35,16 @@ import unittest
 
 from Common.Test.cti import *
 from Common.Test.playback import playback
+import x3270.Test.vfb as vfb
 
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
 @unittest.skipUnless(shutil.which('xdotool') != None, 'Need xdotool')
 @requests_timeout
 class TestX3270FieldEnd(cti):
 
     # Wait for a window to appear.
-    def find_window(self, title: str):
-        xdotool = Popen(['xdotool', 'search', '--onlyvisible', '--name', title], stdout=PIPE, stderr=DEVNULL)
+    def find_window(self, env: dict[str, str], title: str):
+        xdotool = Popen(['xdotool', 'search', '--onlyvisible', '--name', title], stdout=PIPE, stderr=DEVNULL, env=env)
         out = xdotool.communicate()[0].decode('utf8').strip()
         xdotool.wait(2)
         return out != ''
@@ -50,53 +52,56 @@ class TestX3270FieldEnd(cti):
     # x3270 FieldEnd test.
     def test_x3270_FieldEnd(self):
 
-        # Find an unused port, but do not listen on it yet.
-        playback_port, pts = unused_port()
-        with playback(self, 's3270/Test/ibmlink.trc', playback_port) as p:
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
-            # Start x3270.
-            hport, hts = unused_port()
-            hts.close()
-            (handle, tf) = tempfile.mkstemp()
-            os.close(handle)
-            x3270 = Popen(vgwrap(['x3270', '-title', 'Under Test', '-httpd', str(hport),
-                f'127.0.0.1:{playback_port}']))
-            self.children.append(x3270)
-            self.check_listen(hport)
-            self.try_until(lambda: self.find_window('Under Test'), 4, 'x3270 did not appear')
+            # Find an unused port, but do not listen on it yet.
+            playback_port, pts = unused_port()
+            with playback(self, 's3270/Test/ibmlink.trc', playback_port) as p:
 
-            # Find x3270's window ID.
-            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Show(WindowId)')
-            self.assertTrue(r.ok, 'Expected Window ID query to succeed')
-            window_id = r.json()['result'][0]
+                # Start x3270.
+                hport, hts = unused_port()
+                hts.close()
+                (handle, tf) = tempfile.mkstemp()
+                os.close(handle)
+                x3270 = Popen(vgwrap(['x3270', '-title', 'Under Test', '-httpd', str(hport), '-utenv',
+                                      f'127.0.0.1:{playback_port}']), env=v.Env)
+                self.children.append(x3270)
+                self.check_listen(hport)
+                self.try_until(lambda: self.find_window(v.Env, 'Under Test'), 4, 'x3270 did not appear')
 
-            # Draw the screen.
-            p.send_records(4)
+                # Find x3270's window ID.
+                r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Show(WindowId)')
+                self.assertTrue(r.ok, 'Expected Window ID query to succeed')
+                window_id = r.json()['result'][0]
 
-            # Enter some data, then move the cursor back to the beginning of the field.
-            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/String("Hello threre")')
-            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Home()')
-            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Show(cursor1)')
-            self.assertTrue(r.ok, 'Expected cursor query to succeed')
-            cursor = (r.json()['result'][0]).split(' ')[3]
-            self.assertEqual('13', cursor)
+                # Draw the screen.
+                p.send_records(4)
 
-            # Send End.
-            # XXX: The Timing Mark helps, but does not ensure that the key was processed.
-            os.system(f'xdotool windowfocus --sync {window_id} key --window {window_id} End')
-            p.send_tm()
+                # Enter some data, then move the cursor back to the beginning of the field.
+                self.get(f'http://127.0.0.1:{hport}/3270/rest/json/String("Hello threre")')
+                self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Home()')
+                r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Show(cursor1)')
+                self.assertTrue(r.ok, 'Expected cursor query to succeed')
+                cursor = (r.json()['result'][0]).split(' ')[3]
+                self.assertEqual('13', cursor)
 
-            # Verify the cursor moved to the end of the field.
-            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Show(cursor1)')
-            self.assertTrue(r.ok, 'Expected cursor query to succeed')
-            cursor = (r.json()['result'][0]).split(' ')[3]
-            self.assertEqual('20', cursor)
+                # Send End.
+                # XXX: The Timing Mark helps, but does not ensure that the key was processed.
+                os.system(f'DISPLAY={v.Display} xdotool windowfocus --sync {window_id} key --window {window_id} End')
+                p.send_tm()
 
-            # Clean up.
-            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
-            self.vgwait(x3270)
-            pts.close()
-            os.unlink(tf)
+                # Verify the cursor moved to the end of the field.
+                r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Show(cursor1)')
+                self.assertTrue(r.ok, 'Expected cursor query to succeed')
+                cursor = (r.json()['result'][0]).split(' ')[3]
+                self.assertEqual('20', cursor)
+
+                # Clean up.
+                self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
+                self.vgwait(x3270)
+                pts.close()
+                os.unlink(tf)
 
 if __name__ == '__main__':
     unittest.main()

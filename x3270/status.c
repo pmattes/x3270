@@ -990,8 +990,11 @@ set_status_changed(int col)
     }
 }
 
-/* Update the status line by displaying "symbol" at column "col".  */
-static void
+/**
+ * Update the status line by displaying "symbol" at column "col".
+ * @returns true if the column changed
+ */
+static bool
 status_add(int col, unsigned char symbol, enum keytype keytype)
 {
     XChar2b n2b;
@@ -1001,13 +1004,14 @@ status_add(int col, unsigned char symbol, enum keytype keytype)
     n2b.byte2 = symbol;
     if (status_2b[col].byte1 == n2b.byte1 &&
 	    status_2b[col].byte2 == n2b.byte2) {
-	return;
+	return false;
     }
     status_2b[col] = n2b;
     status_1b[col] = symbol;
 
     /* Update change status. */
     set_status_changed(col);
+    return true;
 }
 
 /**
@@ -1554,7 +1558,12 @@ do_shift(int state)
 	    (*standard_font ? 'M' : CG_M) : nullblank, KT_STD);
     status_add(SHIFT-1, (state & AltKeyDown) ?
 	    (*standard_font ? 'A' : CG_A) : nullblank, KT_STD);
-    status_add(SHIFT, (state & ShiftKeyDown) ?
+
+    bool shifted = (state & ShiftKeyDown) != 0;
+    bool locked = (state & CapsLock) != 0;
+    bool caps = shifted ^ locked;
+
+    status_add(SHIFT, (xappres.upshift_caps? caps: shifted) ?
 	    (*standard_font ? '^' : CG_upshift) : nullblank, KT_STD);
 
     /* APL requires some somersaults. */

@@ -34,6 +34,9 @@
 
 #include "globals.h"
 #include "xglobals.h"
+#include <assert.h>
+#include <fcntl.h>
+#include <time.h>
 
 #include "utils.h"
 
@@ -193,64 +196,115 @@ RemoveExcept(ioid_t cookie)
 /*
  * Timer callbacks.
  */
+static int to_pipe[2] = { -1, -1 };
+static unsigned long to_next_seq = 1;
 
+/* Timeout record. */
 typedef struct torec {
-    tofn_t	  fn;
-    XtIntervalId  id;
-    struct torec *next;
+    llist_t		llist;		/* linkage */
+    struct timespec	expires;	/* monotonic expiration time */
+    tofn_t	  	fn;		/* callback function */
+    XtIntervalId	id;		/* Xt identifier */
+    unsigned long	seq;		/* sequence number */
 } torec_t;
 
-static torec_t *torecs = NULL;
+llist_t torecs = LLIST_INIT(torecs);
 
+/**
+ * Timeout callback function.
+ * @param[in] closure	Context
+ * @param[in] id	Identifier
+ */
 static void
 to_fn(XtPointer closure, XtIntervalId *id)
 {
     torec_t *torec;
-    torec_t *prev = NULL;
-    tofn_t fn = NULL;
-
-    for (torec = torecs; torec != NULL; torec = torec->next) {
+    bool found = false;
+    FOREACH_LLIST(&torecs, torec, torec_t *) {
 	if (torec->id == *id) {
-		break;
+	    found = true;
+	    break;
 	}
-	prev = torec;
-    }
+    } FOREACH_LLIST_END(&torecs, torec, torec_t *);
 
-    if (torec != NULL) {
-
-	/* Remember the record. */
-	fn = torec->fn;
-
-	/* Free the record. */
-	if (prev != NULL) {
-	    prev->next = torec->next;
-	} else {
-	    torecs = torec->next;
-	}
-	XtFree((XtPointer)torec);
-
-	/* Call the function. */
-	(*fn)((ioid_t)*id);
+    /* Write the sequence number to the pipe. */
+    if (found) {
+	ssize_t nw = write(to_pipe[1], &torec->seq, sizeof(torec->seq));
+	assert(nw == sizeof(unsigned long));
     }
 }
 
+/**
+ * Timeout input function (input from the pipe).
+ * @param[in] closure	Context (unused)
+ * @param[in] source	Input source (unused)
+ * @param[in] id	Idenfier (unused)
+ */
+static void
+to_input(XtPointer closure, int *source, XtInputId *id)
+{
+    /* Read in the sequence number. */
+    unsigned long seq;
+    ssize_t nr = read(to_pipe[0], &seq, sizeof(seq));
+    assert(nr == sizeof(seq));
+
+    torec_t *torec;
+    bool found = false;
+    FOREACH_LLIST(&torecs, torec, torec_t *) {
+	if (torec->seq == seq) {
+	    found = true;
+	    break;
+	}
+    } FOREACH_LLIST_END(&torecs, torec, torec_t *);
+
+    if (found) {
+	llist_unlink(&torec->llist);
+	(torec->fn)((ioid_t)torec->seq);
+	Free(torec);
+    }
+}
+
+/**
+ * Add a timeout.
+ * @param[in] msec	Interval, in milliseconds
+ * @param[in] fn	Callback function
+ * @returns I/O identifier
+ */
 ioid_t
 AddTimeOut(unsigned long msec, tofn_t fn)
 {
-    if (msec > 0) {
-	torec_t *torec;
+    if (to_pipe[0] < 0) {
+	if (pipe(to_pipe) < 0) {
+	    XtError("AddTimeOut: pipe() failed");
+	}
+	if (fcntl(to_pipe[0], F_SETFD, 1) < 0) {
+	    XtError("AddTimeOut: Can't set close-on-exec on timeout pipe input");
+	}
+	if (fcntl(to_pipe[1], F_SETFD, 1) < 0) {
+	    XtError("AddTimeOut: Can't set close-on-exec on timeout pipe output");
+	}
+	XtAppAddInput(appcontext, to_pipe[0], (XtPointer)XtInputReadMask, to_input, NULL);
+    }
 
-	torec = (torec_t *)XtMalloc(sizeof(torec_t));
+    if (msec > 0) {
+	/* Allocate a record for it and add an Xt timeout. */
+	torec_t *torec = (torec_t *)XtMalloc(sizeof(torec_t));
+	llist_init(&torec->llist);
 	torec->fn = fn;
 	torec->id = XtAppAddTimeOut(appcontext, msec, to_fn, NULL);
-	torec->next = torecs;
-	torecs = torec;
-	return torec->id;
+	torec->seq = to_next_seq++;
+	llist_insert_before(&torec->llist, &torecs);
+	return (ioid_t)torec->seq;
     } else {
+	/* Add a deferred event instead. */
 	return AddDefer(fn);
     }
 }
 
+/**
+ * Remove a timeout.
+ * @param[in] cookie	I/O identifier
+ */
 void
 RemoveTimeOut(ioid_t cookie)
 {
@@ -259,25 +313,19 @@ RemoveTimeOut(ioid_t cookie)
     }
 
     torec_t *torec;
-    torec_t *prev = NULL;
-
-    for (torec = torecs; torec != NULL; torec = torec->next) {
-	if (torec->id == cookie) {
-		break;
+    bool found = false;
+    FOREACH_LLIST(&torecs, torec, torec_t *) {
+	if (torec->seq == (unsigned long)cookie) {
+	    found = true;
+	    break;
 	}
-	prev = torec;
-    }
+    } FOREACH_LLIST_END(&torecs, torec, torec_t *);
 
-    if (torec != NULL) {
-	XtRemoveTimeOut(cookie);
-	if (prev != NULL) {
-	    prev->next = torec->next;
-	} else {
-	    torecs = torec->next;
-	}
-	XtFree((XtPointer)torec);
-    } else {
-	Error("RemoveTimeOut: Can't find");
+    /* Remove the Xt timeout and free the record. */
+    if (found) {
+	XtRemoveTimeOut(torec->id);
+	llist_unlink(&torec->llist);
+	Free(torec);
     }
 }
 

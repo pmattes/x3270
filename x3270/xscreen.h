@@ -70,6 +70,7 @@
 #define MetaKeyDown  0x02
 #define AltKeyDown   0x04
 #define AplMode      0x08
+#define CapsLock     0x10
 
 /* selections */
 

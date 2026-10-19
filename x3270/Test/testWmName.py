@@ -27,22 +27,21 @@
 #
 # x3270 _NET_WM_NAME tests
 
-import os
 from subprocess import Popen, DEVNULL, check_output
 import unittest
 
 from Common.Test.cti import *
 from Common.Test.playback import playback
-import x3270.Test.tvs as tvs
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
 class TestX3270WmName(cti):
 
     # x3270 title test.
     def title_test(self, cmdlineTitle: bool = False):
 
-        # Start a tightvnc server.
-        with tvs.tightvncserver(self):
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
             # Start 'playback' to feed x3270.
             playback_port, ts = unused_port()
@@ -51,15 +50,11 @@ class TestX3270WmName(cti):
 
                 # Start x3270.
                 x3270_port, ts = unused_port()
-                cmdline = ["x3270",
-                    "-xrm", f"x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect",
-                    "-httpd", f"127.0.0.1:{x3270_port}" ]
+                cmdline = ['x3270', '-httpd', f'127.0.0.1:{x3270_port}', '-utenv' ]
                 if cmdlineTitle:
                     cmdline += [ '-title', 'foo']
                 cmdline.append(f'127.0.0.1:{playback_port}')
-                env = os.environ.copy()
-                env['DISPLAY'] = ':2'
-                x3270 = Popen(vgwrap(cmdline), stdout=DEVNULL, env=env)
+                x3270 = Popen(vgwrap(cmdline), stdout=DEVNULL, env=v.Env)
                 self.children.append(x3270)
                 self.check_listen(x3270_port)
                 ts.close()
@@ -72,7 +67,7 @@ class TestX3270WmName(cti):
                 wid = r.json()['result'][0]
 
                 # Check the _NET_WM_NAME property (the window title).
-                name = check_output(['xprop', '-display', ':2', '-id', wid, '_NET_WM_NAME'])
+                name = check_output(['xprop', '-display', v.Display, '-id', wid, '_NET_WM_NAME'])
                 if cmdlineTitle:
                     self.assertEqual(name.decode(), f'_NET_WM_NAME(UTF8_STRING) = "foo"\n')
                 else:
@@ -83,11 +78,11 @@ class TestX3270WmName(cti):
             self.vgwait(x3270)
 
     # x3270 default title test.
-    test_x3270_default_title(self):
+    def test_x3270_default_title(self):
         self.title_test()
 
     # x3270 command-line title test.
-    test_x3270_explicit_title(self):
+    def test_x3270_explicit_title(self):
         self.title_test(cmdlineTitle=True)
 
 if __name__ == '__main__':

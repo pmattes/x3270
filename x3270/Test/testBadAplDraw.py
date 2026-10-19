@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,11 +34,10 @@ import unittest
 
 from Common.Test.cti import *
 from Common.Test.playback import playback
-import x3270.Test.tvs as tvs
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
-@unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
-@unittest.skipIf(os.system('import -h 2>/dev/null') != 256, "ImageMagick needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
+@unittest.skipIf(os.system('import -h 2>/dev/null') != 256, 'ImageMagick needed for tests')
 @requests_timeout
 class TestX3270BadAplDraw(cti):
 
@@ -47,8 +46,8 @@ class TestX3270BadAplDraw(cti):
     # incorrectly using anything but the 3270 font.
     def test_x3270_bad_apl_draw(self):
 
-        # Start a tightvnc server.
-        with tvs.tightvncserver(self):
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
             # Start 'playback' to feed x3270's.
             playback_port, ts = unused_port()
@@ -56,13 +55,10 @@ class TestX3270BadAplDraw(cti):
                 ts.close()
 
                 # Start x3270.
-                env = os.environ.copy()
-                env['DISPLAY'] = ':2'
                 x3270_port, ts = unused_port()
-                x3270 = Popen(vgwrap(['x3270', '-efont', 'fixed',
-                    '-xrm', f'x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect',
+                x3270 = Popen(vgwrap(['x3270', '-efont', 'fixed', '-utenv',
                     '-httpd', f'127.0.0.1:{x3270_port}',
-                    f'127.0.0.1:{playback_port}']), stdout=DEVNULL, env=env)
+                    f'127.0.0.1:{playback_port}']), stdout=DEVNULL, env=v.Env)
                 self.children.append(x3270)
                 self.check_listen(x3270_port)
                 ts.close()
@@ -86,14 +82,16 @@ class TestX3270BadAplDraw(cti):
                 else:
                     (handle, name) = tempfile.mkstemp(suffix=".bmp")
                     os.close(handle)
-                self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name}"'))
+                self.assertEqual(0, os.system(f'import -display {v.Display} -window {wid} "{name}"'))
 
             # Wait for the processes to exit.
             self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
             self.vgwait(x3270)
 
         # Make sure the image is correct.
-        self.assertEqual(0, os.system(f'cmp -s {name} x3270/Test/badapl.bmp'))
+        rv1 = os.system(f'cmp -s {name} x3270/Test/badapl.bmp')
+        rv2 = os.system(f'cmp -s {name} x3270/Test/badapl2.bmp')
+        self.assertTrue(rv1 == 0 or rv2 == 0, 'Screen image did not match reference image')
         if not 'GENERATE' in os.environ:
             os.unlink(name)
 

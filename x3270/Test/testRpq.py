@@ -33,50 +33,54 @@ import unittest
 from Common.Test.cti import *
 from Common.Test.playback import playback
 import Common.Test.rpq as rpq
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
 class TestX3270RpqNames(cti):
 
     # x3270 RPQNAMES test
     def x3270_rpqnames(self, rpq: str, reply: str, stderr_count=0):
 
-        # Start x3270.
-        x3270 = Popen(vgwrap(['x3270', '-script']), stdin=PIPE, stdout=DEVNULL, stderr=PIPE)
-        self.children.append(x3270)
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
-        # Start 'playback' to read x3270's output.
-        port, ts = unused_port()
-        with playback(self, 's3270/Test/rpqnames.trc', port=port) as p:
-            ts.close()
+            # Start x3270.
+            x3270 = Popen(vgwrap(['x3270', '-script', '-utenv']), stdin=PIPE, stdout=DEVNULL, stderr=PIPE, env=v.Env)
+            self.children.append(x3270)
 
-            # Connect x3270 to playback.
-            x3270.stdin.write(f'Set(rpq,{rpq})\n'.encode())
-            x3270.stdin.write(f'Open(c:127.0.0.1:{port})\n'.encode())
+            # Start 'playback' to read x3270's output.
+            port, ts = unused_port()
+            with playback(self, 's3270/Test/rpqnames.trc', port=port) as p:
+                ts.close()
+
+                # Connect x3270 to playback.
+                x3270.stdin.write(f'Set(rpq,{rpq})\n'.encode())
+                x3270.stdin.write(f'Open(c:127.0.0.1:{port})\n'.encode())
+                x3270.stdin.flush()
+
+                # Write to the mark in the trace and discard whatever comes back until this point.
+                p.send_to_mark()
+
+                # Send the Query WSF.
+                p.send_records(1, send_tm=False)
+
+                # Get the response.
+                ret = p.send_tm()
+
+                # Parse the response.
+                prefix = ret[:10]
+                self.assertTrue(prefix.startswith('88')) # QueryReply
+                self.assertTrue(prefix.endswith('81a1')) # RPQ names
+                ret = ret[10:]
+                self.assertTrue(ret.endswith('ffeffffc06')) # IAC EOR IAC WONT TM
+                ret = ret[:-10]
+                self.assertEqual(reply, ret)
+
+            # Wait for x3270 to exit.
+            x3270.stdin.write(b"Quit()\n")
             x3270.stdin.flush()
-
-            # Write to the mark in the trace and discard whatever comes back until this point.
-            p.send_to_mark()
-
-            # Send the Query WSF.
-            p.send_records(1, send_tm=False)
-
-            # Get the response.
-            ret = p.send_tm()
-
-            # Parse the response.
-            prefix = ret[:10]
-            self.assertTrue(prefix.startswith('88')) # QueryReply
-            self.assertTrue(prefix.endswith('81a1')) # RPQ names
-            ret = ret[10:]
-            self.assertTrue(ret.endswith('ffeffffc06')) # IAC EOR IAC WONT TM
-            ret = ret[:-10]
-            self.assertEqual(reply, ret)
-
-        # Wait for x3270 to exit.
-        x3270.stdin.write(b"Quit()\n")
-        x3270.stdin.flush()
-        x3270.stdin.close()
-        self.vgwait(x3270)
+            x3270.stdin.close()
+            self.vgwait(x3270)
 
         # Verify stderr.
         stderr = x3270.stderr.readlines()

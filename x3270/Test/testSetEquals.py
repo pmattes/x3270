@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,33 +27,35 @@
 #
 # x3270 -set foo=bar tests
 
-import os
 from subprocess import Popen, PIPE, DEVNULL
 import unittest
 
 from Common.Test.cti import *
-import Common.Test.playback as playback
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
 @requests_timeout
 class TestX3270SetEquals(cti):
 
     # x3270 -set model= test
     def test_x3270_set_equals(self):
 
-        # Start x3270.
-        hport, hts = unused_port()
-        hts.close()
-        x3270 = Popen(vgwrap(['x3270', '-set', 'model=3278', '-httpd', str(hport)]))
-        self.children.append(x3270)
-        self.check_listen(hport)
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
-        r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(terminalname)')
-        j = r.json()
-        self.assertEqual('IBM-3278-4-E', j['result'][0], 'Expecting "IBM-3278-4-E" as the terminal name')
+            # Start x3270.
+            hport, hts = unused_port()
+            hts.close()
+            x3270 = Popen(vgwrap(['x3270', '-set', 'model=3278', '-httpd', str(hport), '-utenv']), env=v.Env)
+            self.children.append(x3270)
+            self.check_listen(hport)
 
-        self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
-        self.vgwait(x3270)
+            r = self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Query(terminalname)')
+            j = r.json()
+            self.assertEqual('IBM-3278-4-E', j['result'][0], 'Expecting "IBM-3278-4-E" as the terminal name')
+
+            self.get(f'http://127.0.0.1:{hport}/3270/rest/json/quit')
+            self.vgwait(x3270)
 
 if __name__ == '__main__':
     unittest.main()

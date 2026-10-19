@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,22 +28,24 @@
 # x3270 basic command-line tests
 
 import unittest
-import sys
-import os
 
 from Common.Test.cti import *
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
 class TestX3270BasicCmdline(cti):
 
     # x3270 -v and -help test
     def test_x3270_v_help(self):
-        self.check_dash_v('x3270')
-        self.check_help('x3270')
-        self.check_bad('x3270')
-        self.check_bad2('x3270')
-        self.check_toomany('x3270')
-        self.check_incomplete('x3270')
+
+        #  Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
+            self.check_dash_v('x3270', env=v.Env)
+            self.check_help('x3270', env=v.Env)
+            self.check_bad('x3270', env=v.Env)
+            self.check_bad2('x3270', env=v.Env)
+            self.check_toomany('x3270', env=v.Env)
+            self.check_incomplete('x3270', env=v.Env)
 
 if __name__ == '__main__':
     unittest.main()

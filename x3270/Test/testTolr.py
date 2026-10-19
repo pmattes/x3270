@@ -33,29 +33,33 @@ import tempfile
 import unittest
 
 from Common.Test.cti import *
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
 class TestX3270Tolr(cti):
 
     # x3270 trace-of-last-resort test
     def test_x3270_tolr(self):
 
-        handle, tracefile = tempfile.mkstemp()
-        os.close(handle)
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
-        # Start x3270.
-        env = os.environ
-        env['X3270TOLR'] = tracefile
-        x3270 = Popen(vgwrap(['x3270', '-script', '-set', 'detailTrace=infra']), stdin=PIPE, stdout=DEVNULL, env=env)
-        self.children.append(x3270)
+            handle, tracefile = tempfile.mkstemp()
+            os.close(handle)
 
-        # Tell x3270 to exit.
-        x3270.stdin.write(b'Quit()\n')
-        x3270.stdin.flush()
+            # Start x3270.
+            env = v.Env.copy()
+            env['X3270TOLR'] = tracefile
+            x3270 = Popen(vgwrap(['x3270', '-script', '-set', 'detailTrace=infra', '-utenv']), stdin=PIPE, stdout=DEVNULL, env=env)
+            self.children.append(x3270)
 
-        # Wait for the processes to exit.
-        x3270.stdin.close()
-        self.vgwait(x3270)
+            # Tell x3270 to exit.
+            x3270.stdin.write(b'Quit()\n')
+            x3270.stdin.flush()
+
+            # Wait for the processes to exit.
+            x3270.stdin.close()
+            self.vgwait(x3270)
 
         # Verify what was traced.
         with open(tracefile, 'rb') as file:

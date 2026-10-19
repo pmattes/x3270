@@ -31,25 +31,29 @@ from subprocess import Popen, PIPE
 import unittest
 
 from Common.Test.cti import *
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
 class TestX3270OutputQueue(cti):
 
     # x3270 output queue config test
     def x3270_oq(self, spec: str, expect: str, stderr=False):
 
-        # Start x3270.
-        args=['x3270', '-script']
-        if spec != None:
-            args += ['-set', f'outputQueues={spec}']
-        x3270 = Popen(vgwrap(args), stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        self.children.append(x3270)
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
-        # Feed x3270 one action.
-        got = x3270.communicate(input=b'Show(OutputQueues)\n', timeout=10)
+            # Start x3270.
+            args=['x3270', '-script', '-utenv']
+            if spec != None:
+                args += ['-set', f'outputQueues={spec}']
+            x3270 = Popen(vgwrap(args), stdin=PIPE, stdout=PIPE, stderr=PIPE, env=v.Env)
+            self.children.append(x3270)
 
-        # Wait for the processes to exit.
-        self.vgwait(x3270)
+            # Feed x3270 one action.
+            got = x3270.communicate(input=b'Show(OutputQueues)\n', timeout=10)
+
+            # Wait for the processes to exit.
+            self.vgwait(x3270)
 
         line1 = got[0].splitlines()[0].decode('utf8')
         self.assertEqual('data: ' + expect, line1)
@@ -58,7 +62,7 @@ class TestX3270OutputQueue(cti):
             self.assertNotEqual(b'', err)
         else:
             self.assertEqual(b'', err)
-    
+
     def test_x3270_oq_1m(self):
         self.x3270_oq('1m', 'queueing enabled limit 976KiB')
     def test_x3270_oq_bad(self):

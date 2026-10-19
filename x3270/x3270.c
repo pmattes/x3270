@@ -129,7 +129,6 @@ xappres_t	xappres;
 char           *user_title = NULL;
 
 /* Statics */
-static void	peek_at_xevent(XEvent *);
 static XtErrorMsgHandler old_emh;
 static void	trap_colormaps(String, String, String, String, String *,
 			Cardinal *);
@@ -145,6 +144,8 @@ static void	label_init(void);
 static void	sigchld_handler(int);
 static char    *user_icon_name = NULL;
 static void	copy_xres_to_res_bool(void);
+static ioid_t	caps_lock_id = NULL_IOID;
+static void	poll_shift(ioid_t id);
 
 XrmOptionDescRec base_options[]= {
     { OptActiveIcon,	DotActiveIcon,	XrmoptionNoArg,		ResTrue },
@@ -635,11 +636,13 @@ main(int argc, char *argv[])
      */
     XtVaSetValues(toplevel, XtNtranslations, XtParseTranslationTable("\
 <Message>WM_PROTOCOLS:          PA-WMProtocols()\n\
-<KeymapNotify>:                 PA-KeymapNotify()\n\
 <PropertyNotify>WM_STATE:       PA-StateChanged()\n\
 <FocusIn>:                      PA-Focus()\n\
 <FocusOut>:                     PA-Focus()\n\
 <ConfigureNotify>:              PA-ConfigureNotify()"), NULL);
+
+    /* Look up modifiers. */
+    mod_init();
 
 #if defined(LOCAL_PROCESS) /*[*/
     /* Pick out the -e option. */
@@ -920,42 +923,45 @@ main(int argc, char *argv[])
 
     /* Process X events forever. */
     while (1) {
-	XEvent event;
-
-	while (XtAppPending(appcontext) & (XtIMXEvent | XtIMTimer)) {
-	    if (XtAppPeekEvent(appcontext, &event)) {
-		peek_at_xevent(&event);
+	if (!any_deferred()) {
+	    /*
+	     * Block until there is an X event or an input event, while quietly processing Xt timeouts.
+	     * Note that we only do this if there are no deferred actions.
+	     */
+	    XEvent event;
+	    Boolean is_xevent = XtAppPeekEvent(appcontext, &event);
+	    if (!is_xevent && XtAppPending(appcontext) == 0) {
+		/* Yes, this happens sometimes, and there's nothing we can do about it. */
+		continue;
 	    }
-	    XtAppProcessEvent(appcontext, XtIMXEvent | XtIMTimer);
 	}
+
+	/* Process X events, Xt timer events, and input events until there aren't any more. */
+	while (XtAppPending(appcontext) & (XtIMXEvent | XtIMTimer | XtIMAlternateInput)) {
+	    if (XtAppPending(appcontext) & XtIMXEvent) {
+		XtAppProcessEvent(appcontext, XtIMXEvent);
+		if (caps_lock_id == NULL_IOID) {
+		    caps_lock_id = AddTimeOut(50, poll_shift);
+		}
+	    }
+	    if (XtAppPending(appcontext) & (XtIMTimer | XtIMAlternateInput)) {
+		XtAppProcessEvent(appcontext, XtIMTimer | XtIMAlternateInput);
+	    }
+	}
+
+	/* Display the screen. */
 	screen_disp(false);
 
-	/* Run tasks triggered by the events we polled for. */
+	/* Run the task queues and one round of deferred actions. */
 	run_tasks();
 	if (run_deferred()) {
 	    run_tasks();
 	}
-
-	/* If there are deferred events at this point, we don't want to block. */
-	if (any_deferred()) {
-	    txflush();
-	    continue;
-	}
-
-	/* Block and process the next event. */
-	XtAppProcessEvent(appcontext, XtIMAll);
-	screen_disp(false);
 
 	/* Poll for exited children. */
 	poll_children();
 
-	/* Run tasks triggered by the event we blocked for. */
-	run_tasks();
-	if (run_deferred()) {
-	    run_tasks();
-	}
-
-	/* Free transaction memory. */
+	/* This transaction is complete. Free the memory. */
 	txflush();
     }
 }
@@ -1046,26 +1052,42 @@ x3270_register(void)
     register_schange(ST_REMODEL, relabel);
 }
 
-/*
- * Peek at X events before Xt does, calling PA_KeymapNotify_xaction if we see a
- * KeymapEvent.  This is to get around an (apparent) server bug that causes
- * Keymap events to come in with a window id of 0, so Xt never calls our
- * event handler.
- *
- * If the bug is ever fixed, this code will be redundant but harmless.
- */
+/* Poll for changes in Shift, Meta, Alt and CapsLock state. */
 static void
-peek_at_xevent(XEvent *e)
+poll_shift(ioid_t id)
 {
-    static Cardinal zero = 0;
+    caps_lock_id = NULL_IOID;
 
-    if (e->type == KeymapNotify) {
-	ia_cause = IA_PEEK;
-	PA_KeymapNotify_xaction(NULL, e, NULL, &zero);
-	ia_cause = IA_DEFAULT;
+    Window root, child;
+    int root_x, root_y, win_x, win_y;
+    unsigned int state;
+
+    if (!XQueryPointer(display, DefaultRootWindow(display),
+            &root, &child, &root_x, &root_y, &win_x, &win_y, &state)) {
+        vctrace(TC_UI, "poll_shift: XQueryPointer failed\n");
+        return;
     }
-}
 
+    int shift = 0;
+    if (state & LockMask) {
+        shift |= CapsLock;
+    }
+    if (state & ShiftMask) {
+	shift |= ShiftKeyDown;
+    }
+
+    /* If Meta and Alt are both defined but are the same modifier, only report Alt. */
+    unsigned int meta = xkybd_meta_mask();
+    unsigned int alt = xkybd_alt_mask();
+    if (meta && (meta != alt) && (state & meta)) {
+	shift |= MetaKeyDown;
+    }
+    if (alt && (state & alt)) {
+	shift |= AltKeyDown;
+    }
+
+    shift_event(shift);
+}
 
 /*
  * Warning message trap, for catching colormap failures.

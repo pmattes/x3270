@@ -515,7 +515,7 @@ peer_done(task_cbh handle, bool success, bool abort)
 
     const char *errmsg = NULL;
     if (abort || !p->enabled || oq_errored(p->oq, &errmsg)) {
-	close_peer(p, NewString(errmsg));
+	close_peer(p, errmsg);
 	return true;
     }
 

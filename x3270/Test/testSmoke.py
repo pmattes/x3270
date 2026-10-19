@@ -28,46 +28,34 @@
 # x3270 smoke tests
 
 import os
-import shutil
 from subprocess import Popen, DEVNULL
 import tempfile
 import unittest
 
 from Common.Test.cti import *
 from Common.Test.playback import playback
-import x3270.Test.tvs as tvs
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(os.system('xset q >/dev/null 2>&1') != 0, "X11 server needed for tests")
-@unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
-@unittest.skipIf(os.system('import -h 2>/dev/null') != 256, "ImageMagick needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
+@unittest.skipIf(os.system('import -h 2>/dev/null') != 256, 'ImageMagick needed for tests')
 @requests_timeout
 class TestX3270Smoke(cti):
 
     # x3270 smoke test
     def test_x3270_smoke(self):
 
-        # Start a tightvnc server.
-        with tvs.tightvncserver(self):
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self, need_fonts=True) as v:
 
             # Start 'playback' to feed x3270.
             playback_port, ts = unused_port()
             with playback(self, 's3270/Test/ibmlink.trc', port=playback_port) as p:
                 ts.close()
 
-                # Set up the fonts.
-                obj = os.path.abspath(os.path.split(shutil.which('x3270'))[0])
-                self.assertEqual(0, os.system(f'mkfontdir {obj}'))
-                self.assertEqual(0, os.system(f'DISPLAY=:2 xset +fp {obj}/'))
-                self.assertEqual(0, os.system('DISPLAY=:2 xset fp rehash'))
-
                 # Start x3270.
                 x3270_port, ts = unused_port()
-                env = os.environ.copy()
-                env['DISPLAY'] = ':2'
-                x3270 = Popen(vgwrap(["x3270",
-                    "-xrm", f"x3270.connectFileName: {os.getcwd()}/x3270/Test/vnc/.x3270connect",
-                    "-httpd", f"127.0.0.1:{x3270_port}",
-                    f"127.0.0.1:{playback_port}"]), stdout=DEVNULL, env=env)
+                x3270 = Popen(vgwrap(['x3270',
+                    '-httpd', f'127.0.0.1:{x3270_port}', '-utenv', f'127.0.0.1:{playback_port}']), stdout=DEVNULL, env=v.Env)
                 self.children.append(x3270)
                 self.check_listen(x3270_port)
                 ts.close()
@@ -85,14 +73,16 @@ class TestX3270Smoke(cti):
                 else:
                     (handle, name) = tempfile.mkstemp(suffix=".bmp")
                     os.close(handle)
-                self.assertEqual(0, os.system(f'import -display :2 -window {wid} "{name}"'))
+                self.assertEqual(0, os.system(f'import -display {v.Display} -window {wid} "{name}"'))
 
             # Wait for the process to exit.
             self.get(f'http://127.0.0.1:{x3270_port}/3270/rest/json/Quit()')
             self.vgwait(x3270)
 
         # Make sure the image is correct.
-        self.assertEqual(0, os.system(f'cmp -s {name} x3270/Test/ibmlink.bmp'))
+        rv1 = os.system(f'cmp -s {name} x3270/Test/ibmlink.bmp')
+        rv2 = os.system(f'cmp -s {name} x3270/Test/ibmlink2.bmp')
+        self.assertTrue(rv1 == 0 or rv2 == 0, 'Screen image did not match reference image')
         if not 'GENERATE' in os.environ:
             os.unlink(name)
 

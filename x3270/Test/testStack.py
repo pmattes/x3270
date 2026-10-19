@@ -27,42 +27,39 @@
 #
 # x3270 XTWINOPS stack tests
 
-import os
 from subprocess import Popen, DEVNULL, check_output
 import unittest
 
 from Common.Test.cti import *
-import x3270.Test.tvs as tvs
+import x3270.Test.vfb as vfb
 
-@unittest.skipIf(tvs.tightvncserver_test() == False, "tightvncserver needed for tests")
+@unittest.skipUnless(vfb.server_test(), vfb.no_server)
 @requests_timeout
 class TestX3270Stack(cti):
 
     # Read the window title.
-    def window_title(self, window_id: str) -> str:
-        name = check_output(['xprop', '-display', ':2', '-id', window_id, '_NET_WM_NAME'])
+    def window_title(self, display: str, window_id: str) -> str:
+        name = check_output(['xprop', '-display', display, '-id', window_id, '_NET_WM_NAME'])
         return name.decode().split(' = ', 1)[1].strip().strip('"')
 
     # Wait for the window title to change.
-    def check_window_title(self, window_id: str, title: str):
-        self.try_until(lambda: self.window_title(window_id) == title, 2, f'Window title did not become "{title}"')
+    def check_window_title(self, display: str, window_id: str, title: str):
+        self.try_until(lambda: self.window_title(display, window_id) == title, 2, f'Window title did not become "{title}"')
 
     # XTWINOPS push/pop stack tests.
     def test_x3270_xtwinops_stack(self):
 
-        # Start a tightvnc server.
-        with tvs.tightvncserver(self):
+        # Start a virtual frame buffer.
+        with vfb.Xvfb(self) as v:
 
             # Start a server to throw NVT escape sequences at x3270.
             s = copyserver()
 
             # Start x3270.
             hport, ts = unused_port()
-            env = os.environ.copy()
-            env['DISPLAY'] = ':2'
             x3270 = Popen(vgwrap(['x3270', '-set', 'x3270.allowWindowOps',
-                '-set', 'noTelnetInputMode=character', '-httpd', f'127.0.0.1:{hport}',
-                f'a:c:t:127.0.0.1:{s.port}']), stdout=DEVNULL, env=env)
+                '-set', 'noTelnetInputMode=character', '-httpd', f'127.0.0.1:{hport}', '-utenv',
+                f'a:c:t:127.0.0.1:{s.port}']), stdout=DEVNULL, env=v.Env)
             self.children.append(x3270)
             self.check_listen(hport)
             ts.close()
@@ -74,28 +71,28 @@ class TestX3270Stack(cti):
 
             # Set the initial window title.
             s.send('\033]2;base\007')
-            self.check_window_title(window_id, 'base')
+            self.check_window_title(v.Display, window_id, 'base')
 
             # Push the title, change it and pop back to the saved value.
             s.send('\033[22;2t')
             s.send('\033]2;pushed\007')
-            self.check_window_title(window_id, 'pushed')
+            self.check_window_title(v.Display, window_id, 'pushed')
             s.send('\033[23;2t')
-            self.check_window_title(window_id, 'base')
+            self.check_window_title(v.Display, window_id, 'base')
 
             # An indexed push and pop must both be ignored.
             s.send('\033[22;2;1t')
             s.send('\033]2;after-invalid-push\007')
-            self.check_window_title(window_id, 'after-invalid-push')
+            self.check_window_title(v.Display, window_id, 'after-invalid-push')
             s.send('\033[23;2t')
-            self.check_window_title(window_id, 'after-invalid-push')
+            self.check_window_title(v.Display, window_id, 'after-invalid-push')
 
             s.send('\033[22;2t')
             s.send('\033]2;before-invalid-pop\007')
             s.send('\033[23;2;1t')
-            self.check_window_title(window_id, 'before-invalid-pop')
+            self.check_window_title(v.Display, window_id, 'before-invalid-pop')
             s.send('\033[23;2t')
-            self.check_window_title(window_id, 'after-invalid-push')
+            self.check_window_title(v.Display, window_id, 'after-invalid-push')
 
             # Eleven pushes should retain the most recent ten saved titles.
             s.send('\033]2;item0\007')
@@ -104,11 +101,11 @@ class TestX3270Stack(cti):
                 s.send(f'\033]2;item{i + 1}\007')
             for i in range(10, 0, -1):
                 s.send('\033[23;2t')
-                self.check_window_title(window_id, f'item{i}')
+                self.check_window_title(v.Display, window_id, f'item{i}')
 
             # There should be no older title left on the stack.
             s.send('\033[23;2t')
-            self.check_window_title(window_id, 'item1')
+            self.check_window_title(v.Display, window_id, 'item1')
 
             # Clean up.
             self.get(f'http://127.0.0.1:{hport}/3270/rest/json/Quit()')
