@@ -1,4 +1,4 @@
-version="4.6pre1"
+version="4.6alpha1"
 adversion="3.3.4"
 cyear="2026"
 phase="alpha"
