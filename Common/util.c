@@ -682,7 +682,15 @@ tilde_subst(const char *s)
 {
     char *t;
 
-    if (*s != '~' || (t = getenv("HOMEPATH")) == NULL) {
+    if (*s != '~') {
+	return NewString(s);
+    }
+
+    if (product_portable()) {
+	/* In portable mode, ~ is instdir, regardless of $HOMEPATH. */
+	t = instdir;
+    } else if ((t = getenv("HOMEPATH")) == NULL) {
+	/* No $HOMEPATH, nothing to substitute. */
 	return NewString(s);
     }
 

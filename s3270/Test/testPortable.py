@@ -103,6 +103,8 @@ class TestS3270Portable(cti):
         self.s3270_portable(['-noportable'], 'disabled command-line', create_flagfile=True)
     def test_s3270_portable_cmdline_enabled(self):
         self.s3270_portable(['-portable'], 'enabled command-line', portable=True)
+    def test_s3270_portable_cmdline_enabled_tilde(self):
+        self.s3270_portable(['-portable', '-tracefile', '~/foo.txt'], 'enabled command-line', portable=True)
 
 if __name__ == '__main__':
     unittest.main()
