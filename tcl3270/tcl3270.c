@@ -963,7 +963,7 @@ Quit_cmd(ClientData clientData, Tcl_Interp *interp, int objc,
 static char *
 field(const char *status, int index)
 {
-    char *space;
+    const char *space;
     const char *s = status;
     size_t len;
     char *ret;

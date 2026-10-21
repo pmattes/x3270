@@ -4812,7 +4812,7 @@ find_charset(const char *needle, const char *haystack)
 static bool
 charsets_present(const char *sbcs, const char *dbcs, const char *list)
 {
-    char *plus = strchr(list, '+');
+    const char *plus = strchr(list, '+');
     bool is_dbcs = plus != NULL;
 
     if (sbcs == NULL || (dbcs == NULL && is_dbcs)) {
@@ -5033,7 +5033,7 @@ expand_cslist(const char *s)
 {
     int commas = 0;
     const char *t;
-    char *comma;
+    const char *comma;
     char *r;
 
     /* Count the commas. */
@@ -6074,7 +6074,7 @@ init_fonts_from_resources(char *charset_name)
 	cookie = NULL;
 	while ((name = dfc_search_family(csn, NULL, &cookie)) != NULL) {
 	    if (!font_in_menu(name)) {
-		char *dash1 = NULL, *dash2 = NULL;
+		const char *dash1 = NULL, *dash2 = NULL;
 
 		if (name[0] == '-') {
 		    dash1 = strchr(name + 1, '-');

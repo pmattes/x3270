@@ -316,7 +316,7 @@ expand_iac(const unsigned char *raw, size_t raw_len, unsigned char **result,
     int iacs = 0;
     const unsigned char *remain = raw;
     size_t remain_len = raw_len;
-    void *iac;
+    const void *iac;
     unsigned char *out;
 
     while ((iac = memchr(remain, IAC, remain_len)) != NULL) {

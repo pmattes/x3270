@@ -46,7 +46,7 @@ char *
 indent_s(const char *s)
 {
     varbuf_t v;
-    char *newline;
+    const char *newline;
 
     vb_init(&v);
     while ((newline = strchr(s, '\n')) != NULL) {

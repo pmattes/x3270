@@ -81,7 +81,7 @@ int proxy_ports[PT_MAX] = {
     NPORT_SOCKS5D
 };
 
-static bool parse_host_port(char *s, char **puser, char **phost, char **pport, bool connecting);
+static bool parse_host_port(const char *s, char **puser, char **phost, char **pport, bool connecting);
 
 /* Continue functions. */
 static continue_t *continues[PT_MAX] = {
@@ -167,7 +167,7 @@ proxy_error(bool connecting, const char *errmsg)
 int
 proxy_setup(const char *proxy, char **puser, char **phost, char **pport, bool connecting)
 {
-    char *colon;
+    const char *colon;
     size_t sl;
 
     if (proxy == NULL) {
@@ -270,12 +270,12 @@ proxy_setup(const char *proxy, char **puser, char **phost, char **pport, bool co
  * Returns false for failure, true for success.
  */
 static bool
-parse_host_port(char *s, char **puser, char **phost, char **pport, bool connecting)
+parse_host_port(const char *s, char **puser, char **phost, char **pport, bool connecting)
 {
-    char *at;
-    char *h;
-    char *colon;
-    char *hstart;
+    const char *at;
+    const char *h;
+    const char *colon;
+    const char *hstart;
     size_t hlen;
 
     /* Check for 'username:password@' first. */
@@ -294,7 +294,7 @@ parse_host_port(char *s, char **puser, char **phost, char **pport, bool connecti
     }
 
     if (*h == '[') {
-	char *rbrack;
+	const char *rbrack;
 
 	/* Hostname in square brackets. */
 	hstart = h + 1;

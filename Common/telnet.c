@@ -801,7 +801,7 @@ net_connect(const char *host, char *portname, char *accept, bool ls, socket_t *s
 	    if (strchr(host, ' ') != NULL) {
 		execlp("/bin/sh", "sh", "-c", host, NULL);
 	    } else {
-		char *arg1;
+		const char *arg1;
 
 		arg1 = strrchr(host, '/');
 		execlp(host, (arg1 == NULL)? host: arg1 + 1, NULL);

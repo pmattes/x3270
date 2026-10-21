@@ -629,7 +629,7 @@ var_subst(const char *s, unsigned long flags)
 static char *
 tilde_subst(const char *s)
 {
-    char *slash;
+    const char *slash;
     const char *name;
     const char *rest;
     struct passwd *p;
@@ -904,7 +904,7 @@ bool
 split_hier(const char *label, char **base, char ***parents)
 {
     int n_parents = 0;
-    char *gt;
+    const char *gt;
     const char *lp;
 
     for (lp = label; (gt = strchr(lp, '>')) != NULL; lp = gt + 1) {

@@ -851,7 +851,7 @@ parse_ft_keywords(unsigned argc, const char **argv)
     /* See what they specified. */
     for (j = 0; j < argc; j++) {
 	for (i = 0; i < N_PARMS; i++) {
-	    char *eq;
+	    const char *eq;
 	    size_t kwlen;
 	    const char *value;
 

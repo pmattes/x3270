@@ -1426,11 +1426,11 @@ parse_queries(httpd_t *h, const char *query)
     field_t *f;
     field_t *f_last = NULL;
     bool last = false;
-    char *eov;
+    const char *eov;
 
     /* Split the string at each '&'. */
     for (s = query; !last; s = eov + 1) {
-	char *eq;
+	const char *eq;
 	char *name;
 	char *value;
 

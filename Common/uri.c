@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Paul Mattes.
+ * Copyright (c) 2024-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -260,12 +260,12 @@ parse_uri(const char *uri, char **scheme, char **username, char **password, char
 	char **port, char **path, char **query, char **fragment, const char **error)
 {
     char *percent;
-    char *authority_start;
-    char *slash;
-    char *question;
-    char *hash;
+    const char *authority_start;
+    const char *slash;
+    const char *question;
+    const char *hash;
     char *authority = NULL;
-    char *end;
+    const char *end;
 
     *scheme = NULL;
     *username = NULL;
