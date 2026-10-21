@@ -2113,7 +2113,7 @@ task_ft_complete(const char *msg, bool is_error)
 	/* XXX: Calling another task's data method in this task's context could be dangerous. */
 	if (parent != NULL && parent->type == ST_CB) {
 	    const char *fragment = msg;
-	    char *nl;
+	    const char *nl;
 
 	    while ((nl = strchr(fragment, '\n')) != NULL) {
 		if (nl > fragment) {

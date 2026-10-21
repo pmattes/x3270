@@ -2903,7 +2903,8 @@ static void
 parse_screen_spec(const char *str, struct screen_spec *spec)
 {
     char msbuf[3];
-    char *s, *t, c;
+    const char *s;
+    char *t, c;
     bool escaped = false;
     int n_hex = -1;
     int n_octal = -1;
@@ -2918,7 +2919,7 @@ parse_screen_spec(const char *str, struct screen_spec *spec)
     spec->mode_switch = Malloc(strlen(s) + 1);
     t = spec->mode_switch;
     while ((c = *s++)) {
-	char *ix;
+	const char *ix;
 
 	if (escaped) {
 	    switch (c) {

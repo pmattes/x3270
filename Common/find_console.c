@@ -40,6 +40,8 @@
 #if !defined(_WIN32) /*[*/
 /* Well-known consoles, in order of preference. */
 static console_desc_t consoles[] = {
+    { "xdg-terminal-exec",
+	"xdg-terminal-exec --title=" TITLE_SUBST " -- " COMMAND_SUBST },
     { "gnome-terminal",
 	"gnome-terminal --title " TITLE_SUBST " -- " COMMAND_SUBST },
     { "konsole",
@@ -176,8 +178,15 @@ console_args(console_desc_t *t, const char *title, const char ***s, int ix)
     /* Split the command string into tokens. */
     while ((token = strtok_r(str, " ", &saveptr)) != NULL) {
 	str = NULL;
+	const char *ts;
 	if (!strcmp(token, TITLE_SUBST)) {
 	    array_add(s, ix++, title);
+	} else if ((ts = strstr(token, TITLE_SUBST)) != NULL) {
+	    const char *stoken = txAsprintf("%.*s%s%s",
+		    (int)(ts - token), token,	/* text before TITLE_SUBST */
+		    title,			/* title */
+		    ts + strlen(TITLE_SUBST));	/* text after TITLE_SUBST */
+	    array_add(s, ix++, stoken);
 	} else if (strcmp(token, COMMAND_SUBST)) {
 	    array_add(s, ix++, token);
 	}

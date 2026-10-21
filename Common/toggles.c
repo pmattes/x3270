@@ -366,7 +366,7 @@ split_equals(unsigned *argc, const char ***argv)
 	const char *arg = (*argv)[i];
 
 	if (left) {
-	    char *colon = strchr(arg, '=');
+	    const char *colon = strchr(arg, '=');
 
 	    if (colon == NULL || colon == arg) {
 		out_argv[out_ix++] = arg;

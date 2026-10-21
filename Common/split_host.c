@@ -103,7 +103,7 @@ new_split_host(char *raw, char **lu, char **host, char **port, char **accept,
     int     n_equal   = 0;
     char   *part[4]   = { NULL, NULL, NULL, NULL };
     int     part_ix   = 0;
-    char   *pfx;
+    const char *pfx;
 
     *lu       = NULL;
     *host     = NULL;

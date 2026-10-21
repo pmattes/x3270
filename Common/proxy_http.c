@@ -67,7 +67,7 @@ proxy_negotiate_ret_t
 proxy_http(socket_t fd, const char *user, const char *host, unsigned short port)
 {
     char *sbuf;
-    char *colon;
+    const char *colon;
 
     ps.fd = fd;
     ps.rbuf = Malloc(RBUF);

@@ -229,7 +229,7 @@ fprint_screen_start(FILE *f, ptype_t ptype, unsigned opts, const char *caption,
 
     if (caption != NULL) {
 	char *xcaption;
-	char *ts = strstr(caption, "%T%");
+	const char *ts = strstr(caption, "%T%");
 
 	if (ts != NULL) {
 	    time_t t = time(NULL);

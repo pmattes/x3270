@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2021 Paul Mattes.
+ * Copyright (c) 2018-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@ llist_t xpopens = LLIST_INIT(xpopens);
 FILE *
 xpopen(const char *command, const char *mode, pid_t *pidp)
 {
-    char *r, *w;
+    const char *r, *w;
     xpopen_t *xp = NULL;
     int rwmode; /* 0 for read, 1 for write */
     int pipes[2] = { -1, -1 };

@@ -472,7 +472,7 @@ PrintText_action(ia_t ia, unsigned argc, const char **argv)
     } else {
 #if !defined(_WIN32) /*[*/
 	const char *expanded_name;
-	char *pct_e;
+	const char *pct_e;
 
 	if ((pct_e = strstr(name, "%E%")) != NULL) {
 	    expanded_name = txAsprintf("%.*s%s%s",

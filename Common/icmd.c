@@ -114,7 +114,7 @@ getnum_iter(int defval, const char *response)
 static void
 fmt80(const char *s)
 {
-    char *nl;
+    const char *nl;
     size_t nc;
 
     action_output(" ");

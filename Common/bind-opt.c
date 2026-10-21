@@ -100,7 +100,7 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 
     /* Tease apart the syntax. */
     if (spec[0] == '[') {
-	char *rbrack = strchr(spec, ']');
+	const char *rbrack = strchr(spec, ']');
 	size_t sl1;
 
 	/* We appear to have a hostname in square brackets. */
@@ -121,7 +121,7 @@ parse_bind_opt(const char *spec, struct sockaddr **addr, socklen_t *addrlen)
 	port_str = Malloc(sl1);
 	strncpy(port_str, rbrack + 2, sl1);
     } else {
-	char *colon;
+	const char *colon;
 
 	/* No square brackets. Use the colon to split the address and port. */
 	colon = strchr(spec, ':');
