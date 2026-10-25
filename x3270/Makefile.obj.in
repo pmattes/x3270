@@ -97,7 +97,7 @@ fonts.dir: $(FONTS)
 dryrun: dryrun.in
 	cp $< $@
 
-x3270a: x3270a.in
+x3270a: x3270a.py.in
 	cp $< $@
 
 x3270.desktop: x3270.desktop.in

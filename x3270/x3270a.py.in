@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+#
+# Copyright (c) 2019-2026 Paul Mattes.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the names of Paul Mattes, Jeff Sparkes, GTRC nor their
+#       contributors may be used to endorse or promote products derived
+#       from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY PAUL MATTES "AS IS" AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL PAUL MATTES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Run x3270 with cheesy automatic font scaling.
+#  x3270a [-d] [x3270-options]
+
+import math
+import os
+import re
+import shlex
+import subprocess
+import sys
+
+# Print a debugging message when requested.
+def decho(debug, *args):
+    if debug:
+        print(*args, flush=True)
+
+# Return the Wayland scale as a DPI value.
+def wayland_dpi():
+    if os.environ.get('XDG_CURRENT_DESKTOP') in ('GNOME', 'gnome'):
+        try:
+            result = subprocess.run(
+                ['gsettings', 'get', 'org.gnome.desktop.interface',
+                 'text-scaling-factor'],
+                stdout=subprocess.PIPE, text=True, check=False)
+        except FileNotFoundError:
+            return None, 'gsettings is not installed; install gsettings to determine the GNOME display scale'
+        if result.returncode != 0:
+            return None, 'Cannot determine the GNOME display scale'
+
+        try:
+            scale = float(result.stdout.strip())
+        except ValueError:
+            return None, 'Invalid GNOME display scale'
+        if scale <= 0 or not math.isfinite(scale):
+            return None, 'Invalid GNOME display scale'
+        return str(round(scale * 96)), None
+
+    try:
+        result = subprocess.run(['wayland-info'], stdout=subprocess.PIPE,
+                                text=True, check=False)
+    except FileNotFoundError:
+        return None, 'wayland-info is not installed; install wayland-info to determine the Wayland display scale'
+    if result.returncode != 0:
+        return None, 'Cannot determine the Wayland display scale'
+
+    first_scale = None
+    output_section = False
+    for line in result.stdout.splitlines():
+        if line.lstrip().startswith('interface:'):
+            output_section = "interface: 'wl_output'," in line
+            continue
+        if output_section:
+            match = re.search(r'\bx:\s*(-?\d+),\s*y:\s*(-?\d+),\s*scale:\s*(\d+),',
+                              line)
+            if match is not None:
+                scale = int(match.group(3))
+                if scale <= 0:
+                    return None, 'Invalid Wayland display scale'
+                if first_scale is None:
+                    first_scale = scale
+                if match.group(1) == '0' and match.group(2) == '0':
+                    return str(scale * 96), None
+    if first_scale is not None:
+        return str(first_scale * 96), None
+    return None, 'Cannot find a Wayland display scale'
+
+# Return the display DPI and an error message, if any.
+def display_dpi():
+    if (os.environ.get('XDG_SESSION_TYPE') == 'wayland' or
+            os.environ.get('WAYLAND_DISPLAY') is not None):
+        return wayland_dpi()
+
+    try:
+        result = subprocess.run(['xrdb', '-query'], stdout=subprocess.PIPE,
+                                text=True, check=False)
+    except FileNotFoundError:
+        return None, 'Display DPI is unknown'
+
+    for line in result.stdout.splitlines():
+        fields = line.split()
+        if len(fields) >= 2 and fields[0] == 'Xft.dpi:':
+            return fields[1], None
+    return None, 'Display DPI is unknown'
+
+# Run x3270 with fonts scaled for the display DPI.
+def main():
+    arguments = sys.argv[1:]
+    debug = len(arguments) > 0 and arguments[0] == '-d'
+    if debug:
+        arguments = arguments[1:]
+
+    dpi = os.environ.get('DPI')
+    dpi_opt = None
+    if dpi:
+        dpi_opt = f'Xft.dpi: {dpi}'
+    else:
+        dpi, error = display_dpi()
+        if dpi is None:
+            print(error, file=sys.stderr)
+            return 1
+
+    scale = (int(dpi) * 100) // 96
+    decho(debug, f'display is {dpi}dpi, scale is {scale}')
+
+    x3270 = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0]) or '.'),
+                         'x3270')
+    if scale == 100:
+        command = [x3270, *arguments]
+        print(f'+ {shlex.join(command)}', file=sys.stderr)
+        os.execv(x3270, command)
+
+    s20 = (scale * 10) // 130
+    decho(debug, f's20 is {s20}')
+    s24 = (scale * 10) // 108
+    decho(debug, f's24 is {s24}')
+    s32 = (scale * 10) // 81
+    decho(debug, f's32 is {s32}')
+    s40 = (scale * 10) // 65
+    decho(debug, f's40 is {s40}')
+
+    if s32 >= 29:
+        efont = '3270gt32'
+    elif s32 >= 23:
+        efont = '3270gt24'
+    elif s32 >= 19:
+        efont = '3270-20'
+    elif s32 >= 15:
+        efont = '3270gt16'
+    else:
+        efont = '3270'
+    decho(debug, f'efont is {efont}')
+
+    resources = [
+        f'x3270*keyPad*large*font: -misc-fixed-medium-r-normal--{s24}-*-*-*-*-*-iso8859-1',
+        f'x3270*keyPad*small*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
+        f'x3270*value*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
+        f'x3270*filename*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
+        f'x3270*kmPopup*text*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
+        f'x3270*smallLabel.font: -misc-fixed-medium-r-normal--{s24}-*-*-*-*-*-iso8859-1',
+        f'x3270*dataLabel.font: -misc-fixed-medium-r-normal--{s40}-*-*-*-*-*-iso8859-1',
+        f'x3270*dialog*value*font: -misc-fixed-medium-r-normal--{s40}-*-*-*-*-*-iso8859-1',
+        f'x3270*font: -*-helvetica-bold-r-normal--{s32}-*-*-*-p-*-iso8859-1',
+    ]
+    command = [x3270]
+    for resource in resources:
+        command.extend(['-xrm', resource])
+    if dpi_opt is not None:
+        command.extend(['-xrm', dpi_opt])
+    command.extend(['-efont', efont, *arguments])
+
+    print(f'+ {shlex.join(command)}', file=sys.stderr)
+    os.execv(x3270, command)
+
+if __name__ == '__main__':
+    sys.exit(main())
