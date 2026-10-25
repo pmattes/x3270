@@ -7,10 +7,12 @@ Comment headers
  - All new C functions need to have Doxygen-style comment headers.
  - All new Python functions need to have a simple comment header, which can just be a single line '#' comment.
 Running ./configure and building
- - Before committing a change, Tools/config-both and Tools/make-both should be run to ensure that both Linux and Windows builds still work. This is not needed for changes that only affect unit tests or test fixtures (changes that are all under a Test/ directory).
-Code formatting and C standards
+ - Before committing a change to compiled code, Tools/config-both and Tools/make-both should be run to ensure that both Linux and Windows builds still work. This is not needed for changes that only affect unit tests or test fixtures (changes that are all under a Test/ directory).
+Code formatting and standards
  - The code was originally written with a strict 80-column line size. This has since been relaxed to 132 columns.
  - Use of C99 features is permitted, including inline declarations.
+ - No double-spacing in Python code.
 Unit testing
  - Added or changed code should have as close to 100% unit test code coverage as possible. This is enforced informally at the moment, by periodically running gcov on the suite of unit tests. Gcov does not need to be run with every commit.
- - Most unit tests are in Python in the Test/ directory under each component. The naming convention is that the class should be Test<component><functionality>, e.g., TestS3270Nvt, and each test should be named test_<component>_<feature>, e.g., test_s3270_nvt_clear.
+ - Most unit tests are in Python in the Test/ directory under each component. The naming convention is that the class should be Test<component><functionality>, e.g., TestS3270Nvt, and each test should be named `test_<component>_<feature>`, e.g., `test_s3270_nvt_clear`.
+ - Most unit tests have an implicit dependency on the built executables being in $PATH. This is automated by running Python-based unit tests via 'make pytests PYTESTS=<name-of-test>', e.g., 'make pytests PYTESTS=x3270.Test' to run all of the x3270 tests, or 'make pytests PYTESTS=x3270.Test.testX3270a' to run the x3270a tests.
