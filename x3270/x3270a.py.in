@@ -26,7 +26,7 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Run x3270 with cheesy automatic font scaling.
+# Run x3270 with automatic font scaling.
 #  x3270a [-d] [x3270-options]
 
 import math
@@ -37,14 +37,18 @@ import shutil
 import subprocess
 import sys
 
+# Not debugging yet.
+debug = False
+
 # Print a debugging message when requested.
-def decho(debug, *args):
+def decho(*args):
     if debug:
         print(*args, flush=True)
 
 # Return the Wayland scale as a DPI value.
 def wayland_dpi():
-    if os.environ.get('XDG_CURRENT_DESKTOP') in ('GNOME', 'gnome'):
+    if os.environ.get('XDG_CURRENT_DESKTOP') and os.environ['XDG_CURRENT_DESKTOP'].upper().endswith('GNOME'):
+        decho('Running GNOME desktop, using gsettings to get text display scale')
         try:
             result = subprocess.run(
                 ['gsettings', 'get', 'org.gnome.desktop.interface',
@@ -62,6 +66,8 @@ def wayland_dpi():
         if scale <= 0 or not math.isfinite(scale):
             return None, 'Invalid GNOME display scale'
         return str(round(scale * 96)), None
+    else:
+        decho('Not running GNOME desktop')
 
     try:
         result = subprocess.run(['wayland-info'], stdout=subprocess.PIPE,
@@ -96,7 +102,12 @@ def wayland_dpi():
 def display_dpi():
     if (os.environ.get('XDG_SESSION_TYPE') == 'wayland' or
             os.environ.get('WAYLAND_DISPLAY') is not None):
+        decho('Running Wayland, using wayland-info to get base display scale')
         return wayland_dpi()
+    else:
+        decho('Not running Wayland')
+
+    decho('Assuming X.org, using Xft.dpi from xrdb to get display scale')
 
     try:
         result = subprocess.run(['xrdb', '-query'], stdout=subprocess.PIPE,
@@ -114,6 +125,7 @@ def display_dpi():
 def main():
     # Parse our command-line options.
     arguments = sys.argv[1:]
+    global debug
     debug = len(arguments) > 0 and arguments[0] == '-d'
     if debug:
         arguments = arguments[1:]
@@ -130,6 +142,7 @@ def main():
     dpi = os.environ.get('DPI')
     dpi_opt = None
     if dpi:
+        decho('Using DPI override from the environment to get display scale')
         dpi_opt = f'Xft.dpi: {dpi}'
     else:
         dpi, error = display_dpi()
@@ -137,52 +150,50 @@ def main():
             print(error, file=sys.stderr)
             return 1
 
-    scale = (int(dpi) * 100) // 96
-    decho(debug, f'display is {dpi}dpi, scale is {scale}')
+    scale_percent = (int(dpi) * 100) // 96
+    decho(f'Display is {dpi}dpi, scale is {scale_percent}%')
 
-    if scale == 100:
+    if scale_percent == 100:
         command = [x3270, *arguments]
-        print(f'+ {shlex.join(command)}', file=sys.stderr)
-        os.execv(x3270, command)
-
-    s20 = (scale * 10) // 130
-    decho(debug, f's20 is {s20}')
-    s24 = (scale * 10) // 108
-    decho(debug, f's24 is {s24}')
-    s32 = (scale * 10) // 81
-    decho(debug, f's32 is {s32}')
-    s40 = (scale * 10) // 65
-    decho(debug, f's40 is {s40}')
-
-    if s32 >= 29:
-        efont = '3270gt32'
-    elif s32 >= 23:
-        efont = '3270gt24'
-    elif s32 >= 19:
-        efont = '3270-20'
-    elif s32 >= 15:
-        efont = '3270gt16'
     else:
-        efont = '3270'
-    decho(debug, f'efont is {efont}')
+        s20 = (scale_percent * 10) // 130
+        decho(f's20 is {s20}')
+        s24 = (scale_percent * 10) // 108
+        decho(f's24 is {s24}')
+        s32 = (scale_percent * 10) // 81
+        decho(f's32 is {s32}')
+        s40 = (scale_percent * 10) // 65
+        decho(f's40 is {s40}')
 
-    resources = [
-        f'x3270*keyPad*large*font: -misc-fixed-medium-r-normal--{s24}-*-*-*-*-*-iso8859-1',
-        f'x3270*keyPad*small*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
-        f'x3270*value*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
-        f'x3270*filename*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
-        f'x3270*kmPopup*text*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
-        f'x3270*smallLabel.font: -misc-fixed-medium-r-normal--{s24}-*-*-*-*-*-iso8859-1',
-        f'x3270*dataLabel.font: -misc-fixed-medium-r-normal--{s40}-*-*-*-*-*-iso8859-1',
-        f'x3270*dialog*value*font: -misc-fixed-medium-r-normal--{s40}-*-*-*-*-*-iso8859-1',
-        f'x3270*font: -*-helvetica-bold-r-normal--{s32}-*-*-*-p-*-iso8859-1',
-    ]
-    command = [x3270]
-    for resource in resources:
-        command.extend(['-xrm', resource])
-    if dpi_opt is not None:
-        command.extend(['-xrm', dpi_opt])
-    command.extend(['-efont', efont, *arguments])
+        if s32 >= 29:
+            efont = '3270gt32'
+        elif s32 >= 23:
+            efont = '3270gt24'
+        elif s32 >= 19:
+            efont = '3270-20'
+        elif s32 >= 15:
+            efont = '3270gt16'
+        else:
+            efont = '3270'
+        decho(f'efont is {efont}')
+
+        resources = [
+            f'x3270*keyPad*large*font: -misc-fixed-medium-r-normal--{s24}-*-*-*-*-*-iso8859-1',
+            f'x3270*keyPad*small*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
+            f'x3270*value*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
+            f'x3270*filename*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
+            f'x3270*kmPopup*text*font: -misc-fixed-medium-r-normal--{s20}-*-*-*-*-*-iso8859-1',
+            f'x3270*smallLabel.font: -misc-fixed-medium-r-normal--{s24}-*-*-*-*-*-iso8859-1',
+            f'x3270*dataLabel.font: -misc-fixed-medium-r-normal--{s40}-*-*-*-*-*-iso8859-1',
+            f'x3270*dialog*value*font: -misc-fixed-medium-r-normal--{s40}-*-*-*-*-*-iso8859-1',
+            f'x3270*font: -*-helvetica-bold-r-normal--{s32}-*-*-*-p-*-iso8859-1',
+        ]
+        command = [x3270]
+        for resource in resources:
+            command.extend(['-xrm', resource])
+        if dpi_opt is not None:
+            command.extend(['-xrm', dpi_opt])
+        command.extend(['-efont', efont, *arguments])
 
     print(f'+ {shlex.join(command)}', file=sys.stderr)
     os.execv(x3270, command)

@@ -133,7 +133,7 @@ class TestX3270a(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0)
         self.assert_xft_dpi(result, 72)
-        self.assertIn('display is 72dpi, scale is 75\n', result.stdout)
+        self.assertIn('Display is 72dpi, scale is 75%\n', result.stdout)
         self.assertIn('efont is 3270\n', result.stdout)
 
     # Verify xrdb DPI scales fonts without overriding the resource database.
@@ -149,7 +149,7 @@ class TestX3270a(unittest.TestCase):
             commands={'gsettings': '1.5\n'},
             environment={
                 'XDG_SESSION_TYPE': 'wayland',
-                'XDG_CURRENT_DESKTOP': 'GNOME',
+                'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME',
             })
         self.assertEqual(result.returncode, 0)
         arguments = self.assert_xft_dpi(result, None)
@@ -161,7 +161,7 @@ class TestX3270a(unittest.TestCase):
             commands={'gsettings': 'invalid\n'},
             environment={
                 'XDG_SESSION_TYPE': 'wayland',
-                'XDG_CURRENT_DESKTOP': 'GNOME',
+                'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME',
             })
 
         self.assertEqual(result.returncode, 1)
