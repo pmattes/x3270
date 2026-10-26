@@ -33,6 +33,7 @@ import math
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 
@@ -111,10 +112,20 @@ def display_dpi():
 
 # Run x3270 with fonts scaled for the display DPI.
 def main():
+    # Parse our command-line options.
     arguments = sys.argv[1:]
     debug = len(arguments) > 0 and arguments[0] == '-d'
     if debug:
         arguments = arguments[1:]
+
+    # Find x3270.
+    # Try the same directory as x3270a first, then try $PATH.
+    x3270 = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0]) or '.'), 'x3270')
+    if not os.access(x3270, os.X_OK):
+        x3270 = shutil.which('x3270')
+        if not x3270:
+            print('Cannot find x3270', file=sys.stderr)
+            return 1
 
     dpi = os.environ.get('DPI')
     dpi_opt = None
@@ -129,8 +140,6 @@ def main():
     scale = (int(dpi) * 100) // 96
     decho(debug, f'display is {dpi}dpi, scale is {scale}')
 
-    x3270 = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0]) or '.'),
-                         'x3270')
     if scale == 100:
         command = [x3270, *arguments]
         print(f'+ {shlex.join(command)}', file=sys.stderr)
