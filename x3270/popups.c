@@ -1072,7 +1072,7 @@ rop_init(struct rop *rop)
 
 /* Pop up a dialog. Common logic for all forms. */
 static void
-popup_rop(struct rop *rop, abort_callback_t *a, const char *buf)
+popup_rop(struct rop *rop, abort_callback_t *a, const char *buf, Widget w)
 {
     if (!rop->shell || (rop->visible && !rop->overwrites)) {
 	struct rsm *r, **s;
@@ -1103,6 +1103,10 @@ popup_rop(struct rop *rop, abort_callback_t *a, const char *buf)
 	    ring_bell();
 	}
 	rop->visible = true;
+	if (rop->is_error) {
+	    XSetTransientForHint(display, XtWindow(rop->shell),
+		    XtWindow(w? w: toplevel));
+	}
 	popup_popup(rop->shell, rop->grab);
     }
 }
@@ -1113,7 +1117,7 @@ popup_vrop(struct rop *rop, abort_callback_t *a, const char *fmt, va_list args)
 {
     char *buf = Vasprintf(fmt, args);
 
-    popup_rop(rop, a, buf);
+    popup_rop(rop, a, buf, NULL);
     Free(buf);
 }
 
@@ -1144,7 +1148,7 @@ glue_gui_error(pae_t type, const char *s)
     }
     popup_rop(&error_popup,
 	    (host_retry_mode && !appres.secure)? stop_trying: NULL,
-	    (t != NULL)? t: s);
+	    (t != NULL)? t: s, NULL);
     if (t != NULL) {
 	Free(t);
     }
@@ -1225,7 +1229,7 @@ add_error_popdown_callback(void (*callback)(void))
 bool
 glue_gui_output(const char *s)
 {
-    popup_rop(&info_popup, NULL, s);
+    popup_rop(&info_popup, NULL, s, NULL);
     return true;
 }
 
@@ -1363,6 +1367,18 @@ popups_move(void)
 	    XtPopdown(rops[i]->shell);
 	}
     }
+}
+
+void
+popup_a_transient_error(const char *buf, Widget w)
+{
+    popup_rop(&error_popup, NULL, buf, w);
+}
+
+Widget
+error_shell(void)
+{
+    return error_popup.shell;
 }
 
 /**

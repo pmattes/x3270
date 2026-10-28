@@ -195,6 +195,7 @@ static int	bind_ca = 0;
 #define BIND_DIMS_ALT		0x2	/* BIND included alternate size */
 #define BIND_DIMS_VALID		0x4	/* BIND screen sizes were valid */
 static unsigned	bind_state = 0;
+static unsigned char bind_ss = 0;
 static char	**lus = NULL;
 static char	**curr_lu = NULL;
 static char	*try_lu = NULL;
@@ -2535,6 +2536,7 @@ process_bind(unsigned char *buf, size_t buflen)
     bind_ra = 0;
     bind_ca = 0;
     bind_state = 0;
+    bind_ss = 0;
 
     /* Make sure it's a BIND. */
     if (buflen < 1 || buf[0] != BIND_RU) {
@@ -2551,9 +2553,7 @@ process_bind(unsigned char *buf, size_t buflen)
 
     /* Extract the screen size. */
     if (buflen > BIND_OFF_SSIZE) {
-	int bind_ss = buf[BIND_OFF_SSIZE];
-
-	switch (bind_ss) {
+	switch (bind_ss = buf[BIND_OFF_SSIZE]) {
 	case 0x00:
 	case 0x02:
 	    bind_rd = MODEL_2_ROWS;
@@ -2567,7 +2567,7 @@ process_bind(unsigned char *buf, size_t buflen)
 	    bind_cd = MODEL_2_COLS;
 	    bind_ra = maxROWS;
 	    bind_ca = maxCOLS;
-	    bind_state = BIND_DIMS_PRESENT | BIND_DIMS_VALID;
+	    bind_state = BIND_DIMS_PRESENT | BIND_DIMS_ALT | BIND_DIMS_VALID;
 	    break;
 	case 0x7e:
 	    bind_rd = buf[BIND_OFF_RD];
@@ -2781,9 +2781,10 @@ process_eor(void)
 		if (bind_state & BIND_DIMS_ALT) {
 		    trace_ds("< BIND PLU-name '%s' "
 			    "MaxSec-RU %d MaxPri-RU %d "
-			    "Rows-Cols Default %dx%d "
+			    "Rows-Cols SS %02x Default %dx%d "
 			    "Alternate %dx%d%s%s\n",
 			    plu_name, maxru_sec, maxru_pri,
+			    bind_ss,
 			    bind_rd, bind_cd,
 			    bind_ra, bind_ca,
 			    (bind_state & BIND_DIMS_VALID)?
@@ -2793,9 +2794,9 @@ process_eor(void)
 		} else {
 		    trace_ds("< BIND PLU-name '%s' "
 			    "MaxSec-RU %d MaxPri-RU %d "
-			    "Rows-Cols Default %dx%d%s%s\n",
+			    "Rows-Cols SS %02x Default %dx%d%s%s\n",
 			    plu_name, maxru_sec, maxru_pri,
-			    bind_rd, bind_cd,
+			    bind_ss, bind_rd, bind_cd,
 			    (bind_state & BIND_DIMS_VALID)?
 				"": " (invalid)",
 			    appres.bind_limit?

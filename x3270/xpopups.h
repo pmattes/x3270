@@ -49,11 +49,13 @@ void error_init(void);
 void error_popup_init(void);
 bool error_popup_visible(void);
 void error_popup_resume(void);
+extern Widget error_shell(void);
 void info_popup_init(void);
 void PA_confirm_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
 void place_popup(Widget w, XtPointer client_data, XtPointer call_data);
 void move_popup(Widget w, XtPointer client_data, XtPointer call_data);
+extern void popup_a_transient_error(const char *buf, Widget w);
 void popdown_an_error(void);
 void popup_popup(Widget shell, XtGrabKind grab);
 void popups_move(void);
@@ -64,3 +66,4 @@ void add_error_popdown_callback(void (*callback)(void));
 void popups_register(void);
 void popup_a_timed_info(int timeout_ms, const char *format, ...);
 void unplace_popup(Widget w);
+extern void popup_a_transient_error(const char *buf, Widget w);

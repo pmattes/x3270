@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2025 Paul Mattes.
+# Copyright (c) 2021-2026 Paul Mattes.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,13 +28,91 @@
 # s3270 extendedDataStream tests
 
 import unittest
-from subprocess import Popen
+from subprocess import Popen, PIPE, DEVNULL
 import os
 
 from Common.Test.cti import *
+import Common.Test.pipeq as pipeq
 
 @requests_timeout
 class TestS3270ExtendedDataStream(cti):
+
+    # s3270 oversize validation tests
+    def test_s3270_oversize_validation(self):
+        failures = [
+            ('256x128',
+             'Invalid oversize 256x128:\nColumns or rows exceed protocol limit of 255'),
+            ('0x128',
+             'Invalid oversize 0x128:\nZero columns or rows'),
+            ('128x129',
+             'Invalid oversize 128x129:\nExceeds protocol limit of 16384 columns x rows'),
+            ('79x128',
+             'Invalid oversize 79x128:\nLess than minimum 80x43 for model 4'),
+        ]
+
+        # Verify that the largest legal oversize works.
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(port), '-oversize', '128x128']),
+                      stdin=DEVNULL, stdout=DEVNULL, stderr=PIPE)
+        self.children.append(s3270)
+        self.check_listen(port)
+        ts.close()
+
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize)')
+        self.assertTrue(r.ok)
+        self.assertEqual('128x128', r.json()['result'][0])
+
+        # Verify that each Set() validation fails with the matching diagnostic.
+        for index, (oversize, error) in enumerate(failures):
+            with self.subTest(index=index):
+                r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize,{oversize})')
+                self.assertFalse(r.ok)
+                self.assertEqual(error.splitlines(), r.json()['result'])
+
+        # Negative values are syntax errors when supplied with Set().
+        r = self.get(f'http://127.0.0.1:{port}/3270/rest/json/Set(oversize,-128x128)')
+        self.assertFalse(r.ok)
+        self.assertEqual('oversize value must be <cols>x<rows>', r.json()['result'][0])
+
+        self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit(-force)')
+        self.vgwait(s3270)
+        self.assertEqual(b'', s3270.stderr.read())
+        s3270.stderr.close()
+
+        # Verify that startup reports the same validation failures as warnings.
+        for index, (oversize, error) in enumerate(failures):
+            with self.subTest(index=index):
+                port, ts = unused_port()
+                s3270 = Popen(vgwrap(['s3270', '-httpd', str(port), '-oversize', oversize]),
+                              stdin=DEVNULL, stdout=DEVNULL, stderr=PIPE)
+                self.children.append(s3270)
+                warnings = pipeq.pipeq(self, s3270.stderr)
+                self.check_listen(port)
+                ts.close()
+
+                warning = b'\n'.join([warnings.get(), warnings.get()]).decode('utf8')
+                self.assertEqual(error, warning)
+
+                self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit(-force)')
+                self.vgwait(s3270)
+                warnings.close()
+                s3270.stderr.close()
+
+        # Verify that negative command-line dimensions are reported as syntax errors.
+        port, ts = unused_port()
+        s3270 = Popen(vgwrap(['s3270', '-httpd', str(port), '-oversize', '-128x128']),
+                      stdin=DEVNULL, stdout=DEVNULL, stderr=PIPE)
+        self.children.append(s3270)
+        warnings = pipeq.pipeq(self, s3270.stderr)
+        self.check_listen(port)
+        ts.close()
+
+        self.assertEqual(b'Invalid oversize syntax: -128x128', warnings.get())
+
+        self.get(f'http://127.0.0.1:{port}/3270/rest/json/Quit(-force)')
+        self.vgwait(s3270)
+        warnings.close()
+        s3270.stderr.close()
 
     # s3270 extended data stream test
     def test_s3270_extended_data_stream(self):

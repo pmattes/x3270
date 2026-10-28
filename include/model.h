@@ -31,6 +31,7 @@
  *		Declarations for model.c.
  */
 
+const char *canonical_oversize_x(const char *res, unsigned *ovc, unsigned *ovr);
 int common_model_init(void);
 char *create_model(int model_num, bool color);
 const char *get_full_model(void);

@@ -452,5 +452,7 @@
 #define MODEL_5_ROWS		27
 #define MODEL_5_COLS		132
 
-/* Largest combination of rows x columns. */
-#define MAX_ROWS_COLS		0x3fff
+/* Largest number of rows or columns. */
+#define MAX_ROWS_OR_COLS	0xff
+/* Largest combination of (rows x columns) for 14-bit addressing. */
+#define MAX_ROWS_COLS		0x4000

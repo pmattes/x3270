@@ -45,7 +45,7 @@ extern bool screen_changed;
 extern int first_changed;
 extern int last_changed;
 
-bool check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain);
+bool check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain, const char **errp);
 void ctlr_aclear(int baddr, int count, int clear_ea);
 void ctlr_add(int baddr, unsigned char c, unsigned char cs);
 void ctlr_add_nvt(int baddr, ucs4_t ucs4, unsigned char cs);

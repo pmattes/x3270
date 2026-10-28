@@ -1328,6 +1328,14 @@ connect_button_callback(Widget w _is_unused, XtPointer client_data,
     }
     if (host_connect(s, IA_UI)) {
 	XtPopdown(connect_shell);
+    } else {
+	/*
+	 * The error message already popped up. Make it a transient of the connect dialog.
+	 * This is an unfortunate kludge. We should get an error string back from host_connect()
+	 * and call popup_a_transient_error() instead, but there are too many popup_an_error() calls
+	 * in that path to make that easy.
+	 */
+	XSetTransientForHint(display, XtWindow(error_shell()), XtWindow(connect_shell));
     }
 }
 
@@ -1716,21 +1724,25 @@ static void
 oversize_button_callback(Widget w _is_unused, XtPointer client_data,
 	XtPointer call_data _is_unused)
 {
-    char *s;
-    int ovc, ovr;
-    char junk;
-
-    s = XawDialogGetValueString((Widget)client_data);
+    char *s = XawDialogGetValueString((Widget)client_data);
     if (!s || !*s) {
 	return;
     }
-    if (sscanf(s, "%dx%d%c", &ovc, &ovr, &junk) == 2) {
-	if (check_cols_rows(model_num, ovc, ovr, true)) {
+
+    int ovc, ovr;
+    const char *canon = canonical_oversize_x(s, (unsigned *)&ovc, (unsigned *)&ovr);
+    if (canon != NULL) {
+	const char *err = NULL;
+	if (check_cols_rows(model_num, ovc, ovr, false, &err)) {
 	    XtPopdown(oversize_shell);
 	    screen_remodel(model_num, ovc, ovr);
+	} else {
+	    /* We want the error pop-up to be a transient of this dialog, not the main window. */
+	    popup_a_transient_error(err, oversize_shell);
 	}
     } else {
-	popup_an_error("Illegal size: %s", s);
+	/* We want the error pop-up to be a transient of this dialog, not the main window. */
+	popup_a_transient_error("Invalid oversize syntax", oversize_shell);
     }
 }
 

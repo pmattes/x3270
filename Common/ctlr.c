@@ -125,14 +125,14 @@ static void ticking_stop(struct timeval *tp);
  * datastream representation
  */
 static unsigned char code_table[64] = {
-    0x40, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7,
-    0xC8, 0xC9, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F,
-    0x50, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7,
-    0xD8, 0xD9, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F,
-    0x60, 0x61, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7,
-    0xE8, 0xE9, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F,
-    0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7,
-    0xF8, 0xF9, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F,
+    0x40, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7,
+    0xc8, 0xc9, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
+    0x50, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7,
+    0xd8, 0xd9, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
+    0x60, 0x61, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7,
+    0xe8, 0xe9, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
+    0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7,
+    0xf8, 0xf9, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f,
 };
 
 #define IsBlank(c)	((c == EBC_null) || (c == EBC_space))
@@ -147,20 +147,22 @@ static unsigned char code_table[64] = {
 	    if (last_changed == -1 || l > last_changed) last_changed = l; } }
 #define ONE_CHANGED(n)	REGION_CHANGED(n, n+1)
 
+/* Decode a buffer address. */
 #define DECODE_BADDR(c1, c2) \
-	((((c1) & 0xC0) == 0x00) ? \
-	(((c1) & 0x3F) << 8) | (c2) : \
-	(((c1) & 0x3F) << 6) | ((c2) & 0x3F))
+    (((c1) & 0xc0) == 0x00)? \
+    (((c1) & 0x3f) << 8) | (c2): \
+    (((c1) & 0x3f) << 6) | ((c2) & 0x3f)
 
+/* Encode a buffer address. */
 #define ENCODE_BADDR(ptr, addr) { \
-    	if ((ROWS * COLS) > 0x1000) { \
-		*(ptr)++ = ((addr) >> 8) & 0x3F; \
-		*(ptr)++ = (addr) & 0xFF; \
-	} else { \
-		*(ptr)++ = code_table[((addr) >> 6) & 0x3F]; \
-		*(ptr)++ = code_table[(addr) & 0x3F]; \
-	} \
-    }
+    if ((ROWS * COLS) > 0x1000) { \
+	*(ptr)++ = ((addr) >> 8) & 0x3f; \
+	*(ptr)++ = (addr) & 0xff; \
+    } else { \
+	*(ptr)++ = code_table[((addr) >> 6) & 0x3f]; \
+	*(ptr)++ = code_table[(addr) & 0x3f]; \
+    } \
+}
 
 /**
  * Controller module registration.
@@ -275,10 +277,14 @@ model_cols(int m)
  * Ideally this should be called by set_cols_rows() below.
  */
 bool
-check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain)
+check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain, const char **errp)
 {
     unsigned mxc, mxr; /* Maximum rows, columns */
     const char *err;
+
+    if (errp != NULL) {
+	*errp = NULL;
+    }
 
     if (ovc < 0 || ovr < 0) {
 	mn = 2; /* auto-oversize implies a model 2. */
@@ -315,21 +321,35 @@ check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain)
 
     /* Check oversize. */
     if (ovc > 0 || ovr > 0) {
-	if (ovc == 0) {
-	    err = txAsprintf("Invalid %s %dx%d columns:\nzero", ResOversize, ovc, ovr);
+	/*
+	 * Order of checks:
+	 * 1. rows or columns exceed 255
+	 * 2. rows or columns are 0
+	 * 3. rows x columns exceed 0x4000
+	 * 4. rows or columns are smaller than the base model
+	 */
+	if (ovc > MAX_ROWS_OR_COLS || ovr > MAX_ROWS_OR_COLS) {
+	    err = txAsprintf("Invalid %s %dx%d:\nColumns or rows exceed protocol limit of %d",
+		    ResOversize, ovc, ovr, MAX_ROWS_OR_COLS);
 	    if (complain) {
 		popup_an_error("%s", err);
 	    } else {
 		vctrace(TC_INFRA, "%s\n", err);
 	    }
+	    if (errp != NULL) {
+		*errp = err;
+	    }
 	    return false;
 	}
-	if (ovr == 0) {
-	    err = txAsprintf("Invalid %s %dx%d rows:\nzero", ResOversize, ovc, ovr);
+	if (ovr == 0 || ovc == 0) {
+	    err = txAsprintf("Invalid %s %dx%d:\nZero columns or rows", ResOversize, ovc, ovr);
 	    if (complain) {
 		popup_an_error("%s", err);
 	    } else {
 		vctrace(TC_INFRA, "%s\n", err);
+	    }
+	    if (errp != NULL) {
+		*errp = err;
 	    }
 	    return false;
 	}
@@ -341,23 +361,21 @@ check_cols_rows(int mn, unsigned ovc, unsigned ovr, bool complain)
 	    } else {
 		vctrace(TC_INFRA, "%s\n", err);
 	    }
+	    if (errp != NULL) {
+		*errp = err;
+	    }
 	    return false;
 	}
-	if (ovc > 0 && ovc < mxc) {
-	    err = txAsprintf("Invalid %s columns (%d):\nLess than minimum columns (%d) for model %d", ResOversize, ovc, mxc, mn);
+	if ((ovc > 0 && ovc < mxc) || (ovr > 0 && ovr < mxr)) {
+	    err = txAsprintf("Invalid %s %dx%d:\nLess than minimum %dx%d for model %d",
+		    ResOversize, ovc, ovr, mxc, mxr, mn);
 	    if (complain) {
 		popup_an_error("%s", err);
 	    } else {
 		vctrace(TC_INFRA, "%s\n", err);
 	    }
-	    return false;
-	}
-	if (ovr > 0 && ovr < mxr) {
-	    err = txAsprintf("Invalid %s rows (%d):\nLess than minimum rows (%d) for model %d", ResOversize, ovr, mxr, mn);
-	    if (complain) {
-		popup_an_error("%s", err);
-	    } else {
-		vctrace(TC_INFRA, "%s\n", err);
+	    if (errp != NULL) {
+		*errp = err;
 	    }
 	    return false;
 	}
@@ -420,15 +438,18 @@ set_cols_rows(int mn, int ovc, int ovr)
     ov_cols = 0;
     ov_rows = 0;
     if (ovc > 0 || ovr > 0) {
-	if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
+	/* Same order of checks and same error messages as check_cols_rows() above. */
+	if (ovc > MAX_ROWS_OR_COLS || ovr > MAX_ROWS_OR_COLS) {
+	    popup_an_error("Invalid %s %dx%d:\nColumns or rows exceed protocol limit of %d",
+		    ResOversize, ovc, ovr, MAX_ROWS_OR_COLS);
+	} else if (ovc == 0 || ovr == 0) {
+	    popup_an_error("Invalid %s %dx%d:\nZero columns or rows", ResOversize, ovc, ovr);
+	} else if (ovc > MAX_ROWS_COLS || ovr > MAX_ROWS_COLS || ovc * ovr > MAX_ROWS_COLS) {
 	    popup_an_error("Invalid %s %dx%d:\nExceeds protocol limit of %d columns x rows",
 		    ResOversize, ovc, ovr, MAX_ROWS_COLS);
-	} else if (ovc > 0 && ovc < maxCOLS) {
-	    popup_an_error("Invalid %s columns (%d):\nLess than minimuim columns (%d) for model %d",
-		    ResOversize, ovc, maxCOLS, mn);
-	} else if (ovr > 0 && ovr < maxROWS) {
-	    popup_an_error("Invalid %s rows (%d):\nLess than minimum rows (%d) for model %d",
-		    ResOversize, ovr, maxROWS, mn);
+	} else if ((ovc > 0 && ovc < maxCOLS) || (ovr > 0 && ovr < maxROWS)) {
+	    popup_an_error("Invalid %s %dx%d:\nLess than minimum %dx%d for model %d",
+		    ResOversize, ovc, ovr, maxCOLS, maxROWS, mn);
 	} else {
 	    ov_cols = maxCOLS = ovc;
 	    ov_rows = maxROWS = ovr;

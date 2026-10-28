@@ -161,29 +161,43 @@ common_model_init(void)
 /*
  * Canonical representation of oversize.
  */
-static const char *
+const char *
 canonical_oversize_x(const char *res, unsigned *ovc, unsigned *ovr)
 {
-    unsigned x_ovc, x_ovr;
+    int x_ovc, x_ovr;
     char x, junk;
+
+    if (ovc != NULL) {
+	*ovc = 0;
+    }
+    if (ovr != NULL) {
+	*ovr = 0;
+    }
 
     if (res != NULL && (product_auto_oversize() && !strcasecmp(appres.oversize, KwAuto))) {
 	return KwAuto;
     }
 
+    /*
+     * This is a little awkward because the more-obvious solution of doing a sscanf with %u
+     * still accepts a leading '-' and produces a huge result.
+     */
     if (res == NULL ||
-	    sscanf(res, "%u%c%u%c", &x_ovc, &x, &x_ovr, &junk) != 3 ||
+	    sscanf(res, "%d%c%d%c", &x_ovc, &x, &x_ovr, &junk) != 3 ||
 	    strchr("Xx", x) == NULL) {
+	return NULL;
+    }
+    if (x_ovc < 0 || x_ovr < 0) {
 	return NULL;
     }
 
     if (ovc != NULL) {
-	*ovc = x_ovc;
+	*ovc = (unsigned)x_ovc;
     }
     if (ovr != NULL) {
-	*ovr = x_ovr;
+	*ovr = (unsigned)x_ovr;
     }
-    return txAsprintf("%ux%u", x_ovc, x_ovr);
+    return txAsprintf("%ux%u", (unsigned)x_ovc, (unsigned)x_ovr);
 }
 
 /*
@@ -215,7 +229,7 @@ oversize_init(int model_number)
 	    if (canon != NULL) {
 		Replace(appres.oversize, NewString(canon));
 	    } else {
-		xs_warning("Invalid %s value '%s'", ResOversize, appres.oversize);
+		popup_an_error("Invalid %s syntax: %s", ResOversize, appres.oversize);
 		Replace(appres.oversize, NULL);
 	    }
 	}
@@ -356,7 +370,7 @@ toggle_model_done(bool success, unsigned flags, ia_t ia)
     }
 
     /* Check settings. */
-    if (!check_cols_rows(model_number, ovc, ovr, true)) {
+    if (!check_cols_rows(model_number, ovc, ovr, true, NULL)) {
 	goto fail;
     }
 
@@ -453,7 +467,7 @@ done:
 void
 live_change_oversize(int ovc, int ovr)
 {
-    if ((ovc == ov_cols && ovr == ov_rows) || !check_cols_rows(model_num, ovc, ovr, false)) {
+    if ((ovc == ov_cols && ovr == ov_rows) || !check_cols_rows(model_num, ovc, ovr, false, NULL)) {
 	return;
     }
     set_cols_rows(model_num, ovc, ovr);

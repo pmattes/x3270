@@ -35,6 +35,34 @@ import Common.Test.pipeq as pipeq
 
 class TestB3270Popups(cti):
 
+    # b3270 command-line oversize error pop-up test
+    def test_b3270_bad_oversize_popup(self):
+
+        b3270 = Popen(vgwrap(['b3270', '-json', '-oversize', '128by128']),
+                      stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.children.append(b3270)
+        pq = pipeq.pipeq(self, b3270.stdout)
+
+        # The error is generated before stdout initialization, so wait for both
+        # the initialization indication and the stored error pop-up.
+        init = False
+        while True:
+            line = pq.get(2, 'b3270 did not produce expected output')
+            self.assertIsNotNone(line)
+            if line.startswith(b'{"initialize":'):
+                init = True
+            if line.startswith(b'{"popup":{"type":"error","text":"Invalid oversize syntax: 128by128"'):
+                break
+
+        b3270.stdin.close()
+        b3270.stdout.close()
+        self.vgwait(b3270)
+        pq.close()
+
+        self.assertTrue(init, 'Expected initialize before popup')
+        self.assertEqual(b'', b3270.stderr.read())
+        b3270.stderr.close()
+
     # b3270 stored pop-up test
     def test_b3270_stored_popup(self):
 
