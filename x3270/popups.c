@@ -812,6 +812,40 @@ popup_dialog_callback(Widget w, XtPointer client_data,
     called_back = false;
 }
 
+#define WM_PROTOCOLS_TRANSLATIONS \
+"<Message>WM_PROTOCOLS: PA-WMProtocols()"
+#define SHIFT_TRANSLATIONS \
+"<KeyPress>Shift_L:      PA-Shift()\n\
+<KeyRelease>Shift_L:    PA-Shift()\n\
+<KeyPress>Shift_R:      PA-Shift()\n\
+<KeyRelease>Shift_R:    PA-Shift()\n\
+<KeyPress>Meta_L:       PA-Shift()\n\
+<KeyRelease>Meta_L:     PA-Shift()\n\
+<KeyPress>Meta_R:       PA-Shift()\n\
+<KeyRelease>Meta_R:     PA-Shift()\n\
+<KeyPress>Alt_L:        PA-Shift()\n\
+<KeyRelease>Alt_L:      PA-Shift()\n\
+<KeyPress>Alt_R:        PA-Shift()\n\
+<KeyRelease>Alt_R:      PA-Shift()"
+
+/*
+ * Return the common translations for pop-ups.
+ * These (optionally) handle WM_PROTOCOLS so the window can be closed, and
+ * handle Shift, Meta and Alt, to ensure that the OIA is updated correctly.
+ */
+XtTranslations
+common_translations(bool with_wm_protocols)
+{
+    static XtTranslations compiled_translations[2] = { NULL, NULL};
+
+    if (compiled_translations[with_wm_protocols] == NULL) {
+	compiled_translations[with_wm_protocols] = XtParseTranslationTable(
+		with_wm_protocols? WM_PROTOCOLS_TRANSLATIONS "\n" SHIFT_TRANSLATIONS:
+		SHIFT_TRANSLATIONS);
+    }
+    return compiled_translations[with_wm_protocols];
+}
+
 /* Create a simple data entry popup */
 Widget
 create_form_popup(const char *name, XtCallbackProc callback,
@@ -834,6 +868,9 @@ create_form_popup(const char *name, XtCallbackProc callback,
 	    NULL);
     XtFree(widgetname);
     XtAddCallback(shell, XtNpopupCallback, place_popup, (XtPointer)CenterP);
+
+    /* Set some common translations. */
+    XtOverrideTranslations(shell, common_translations(true));
 
     /* Create a dialog in the popup */
 
@@ -1027,6 +1064,9 @@ rop_init(struct rop *rop)
     XtAddCallback(rop->shell, XtNpopupCallback, place_popup,
 	    (XtPointer)CenterP);
     XtAddCallback(rop->shell, XtNpopdownCallback, rop_popdown, rop);
+
+    /* Set some common translations. */
+    XtOverrideTranslations(rop->shell, common_translations(true));
 
     /* Create a dialog in the popup */
     rop->form = XtVaCreateManagedWidget(

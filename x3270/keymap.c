@@ -778,6 +778,7 @@ do_keymap_display(Widget w _is_unused, XtPointer userdata _is_unused,
 	    (XtPointer) CenterP);
     XtAddCallback(km_shell, XtNpopupCallback, km_up, NULL);
     XtAddCallback(km_shell, XtNpopdownCallback, km_down, NULL);
+    XtOverrideTranslations(km_shell, common_translations(true));
 
     /* Create a form in the popup. */
     form = XtVaCreateManagedWidget(ObjDialog, formWidgetClass, km_shell,

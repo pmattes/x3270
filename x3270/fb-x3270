@@ -1,5 +1,5 @@
 !
-! Copyright (c) 1995-2025 Paul Mattes.
+! Copyright (c) 1995-2026 Paul Mattes.
 ! All rights reserved.
 !
 ! Redistribution and use in source and binary forms, with or without
@@ -1359,74 +1359,28 @@ x3270.keypadPopup.container.translations: #override \n\
 	<KeyPress>Alt_R:		PA-Shift()\n\
 	<KeyRelease>Alt_R:		PA-Shift()\n\
 	:<Key>:				Default()
-x3270.errorPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.printerErrorPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.childErrorPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.errorPopup*translations:		#override \n\
 	<Key>Return:			PA-confirm()
 x3270.printerErrorPopup*translations:	#override \n\
 	<Key>Return:			PA-confirm()
 x3270.childErrorPopup*translations:	#override \n\
 	<Key>Return:			PA-confirm()
-x3270.infoPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.printerInfoPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.childInfoPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.infoPopup*translations:		#override \n\
 	<Key>Return:			PA-confirm()
 x3270.printerInfoPopup*translations:	#override \n\
 	<Key>Return:			PA-confirm()
 x3270.childInfoPopup*translations:	#override \n\
 	<Key>Return:			PA-confirm()
-x3270.passwordPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.connectPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.fontPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.keymapPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.printWindowPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.tracePopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.screenTracePopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.screenTracePopup*translations:	#override \n\
 	<Key>Return:			PA-confirm()
-x3270.executeActionPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.saveOptionsPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.aboutCopyrightPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.aboutCopyrightPopup*translations:	#override \n\
 	<Key>Return:			PA-confirm()
-x3270.aboutConfigPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.aboutConfigPopup*translations:	#override \n\
 	<Key>Return:			PA-confirm()
-x3270.aboutStatusPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.aboutStatusPopup*translations:	#override \n\
 	<Key>Return:			PA-confirm()
-x3270.kmPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.kmPopup*translations:		#override \n\
 	<Key>Return:			PA-confirm()
-x3270.luPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-x3270.ftPopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
-! Note: WM_PROTOCOLS is explicitly not defined for ftPopup, so that the user
-! can clear error conditions while a transfer is in progress.
-x3270.ftOverwritePopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.ftPopup*value.translations:	#override \n\
 	<Key>Return:			PA-dialog-next()\n\
 	<Key>Tab:			PA-dialog-next()\n\
@@ -1435,8 +1389,6 @@ x3270.ftPopup*value.translations:	#override \n\
 	Ctrl<Key>C:			PA-dialog-copy(CLIPBOARD)\n\
 	Ctrl<Key>V:			insert-selection(CLIPBOARD)\n\
 	<Key>Delete:			delete-next-character()
-x3270.idlePopup.translations: \
-	<Message>WM_PROTOCOLS:		PA-WMProtocols()
 x3270.idlePopup*value.translations:	#override \n\
 	<Key>Return:			PA-dialog-next()\n\
 	<Key>Tab:			PA-dialog-next()\n\

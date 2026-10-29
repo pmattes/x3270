@@ -238,6 +238,7 @@ init_screentrace_popup(void)
 	    (XtPointer) CenterP);
     XtAddCallback(stmenu_shell, XtNpopupCallback, stmenu_popup_callback,
 	    NULL);
+    XtOverrideTranslations(stmenu_shell, common_translations(true));
 
     /* Create a form in the popup. */
     stmenu_form = XtVaCreateManagedWidget(

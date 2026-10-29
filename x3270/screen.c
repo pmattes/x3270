@@ -511,7 +511,7 @@ rescale(Dimension d)
 void
 save_00translations(Widget w, XtTranslations *t00)
 {
-	*t00 = w->core.tm.translations;
+    *t00 = w->core.tm.translations;
 }
 
 /*
@@ -520,15 +520,17 @@ save_00translations(Widget w, XtTranslations *t00)
 void
 set_translations(Widget w, XtTranslations *t00, XtTranslations *t0)
 {
-	struct trans_list *t;
+    struct trans_list *t;
 
-	if (t00 != NULL)
-		XtOverrideTranslations(w, *t00);
+    if (t00 != NULL) {
+	XtOverrideTranslations(w, *t00);
+    }
 
-	for (t = trans_list; t != NULL; t = t->next)
-		XtOverrideTranslations(w, lookup_tt(t->name, NULL));
+    for (t = trans_list; t != NULL; t = t->next) {
+	    XtOverrideTranslations(w, lookup_tt(t->name, NULL));
+    }
 
-	*t0 = w->core.tm.translations;
+    *t0 = w->core.tm.translations;
 }
 
 /*
@@ -537,15 +539,15 @@ set_translations(Widget w, XtTranslations *t00, XtTranslations *t0)
 void
 screen_set_temp_keymap(XtTranslations trans)
 {
-	if (trans != NULL) {
-		XtOverrideTranslations(nss.widget, trans);
-		XtOverrideTranslations(container, trans);
-	} else {
-		XtUninstallTranslations(nss.widget);
-		XtOverrideTranslations(nss.widget, screen_t0);
-		XtUninstallTranslations(container);
-		XtOverrideTranslations(container, container_t0);
-	}
+    if (trans != NULL) {
+	XtOverrideTranslations(nss.widget, trans);
+	XtOverrideTranslations(container, trans);
+    } else {
+	XtUninstallTranslations(nss.widget);
+	XtOverrideTranslations(nss.widget, screen_t0);
+	XtUninstallTranslations(container);
+	XtOverrideTranslations(container, container_t0);
+    }
 }
 
 /*
@@ -554,10 +556,10 @@ screen_set_temp_keymap(XtTranslations trans)
 void
 screen_set_keymap(void)
 {
-	XtUninstallTranslations(nss.widget);
-	set_translations(nss.widget, &screen_t00, &screen_t0);
-	XtUninstallTranslations(container);
-	set_translations(container, &container_t00, &container_t0);
+    XtUninstallTranslations(nss.widget);
+    set_translations(nss.widget, &screen_t00, &screen_t0);
+    XtUninstallTranslations(container);
+    set_translations(container, &container_t00, &container_t0);
 }
 
 /*
