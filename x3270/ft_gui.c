@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2025 Paul Mattes.
+ * Copyright (c) 1996-2026 Paul Mattes.
  * Copyright (c) 1995, Dick Altenbern.
  * All rights reserved.
  *
@@ -213,6 +213,7 @@ ft_popup_init(void)
 	    NULL);
     XtAddCallback(ft_shell, XtNpopupCallback, place_popup, (XtPointer)CenterP);
     XtAddCallback(ft_shell, XtNpopupCallback, ft_popup_callback, NULL);
+    XtOverrideTranslations(ft_shell, common_translations(true));
 
     /* Create the form within the shell. */
     ft_dialog = XtVaCreateManagedWidget(
@@ -1215,6 +1216,7 @@ progress_popup_init(void)
 	    (XtPointer)CenterP);
     XtAddCallback(progress_shell, XtNpopupCallback,
 	    progress_popup_callback, NULL);
+    XtOverrideTranslations(progress_shell, common_translations(false));
 
     /* Create a form structure to contain the other stuff */
     progress_pop = XtVaCreateManagedWidget(
@@ -1376,6 +1378,7 @@ overwrite_popup_init(const char *path)
 	    (XtPointer)CenterP);
     XtAddCallback(overwrite_shell, XtNpopdownCallback, overwrite_popdown,
 	    NULL);
+    XtOverrideTranslations(overwrite_shell, common_translations(true));
 
     /* Create a form structure to contain the other stuff */
     overwrite_pop = XtVaCreateManagedWidget(

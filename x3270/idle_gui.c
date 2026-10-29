@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1993-2024 Paul Mattes.
+ * Copyright (c) 1993-2026 Paul Mattes.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -187,6 +187,7 @@ idle_popup_init(void)
     XtAddCallback(idle_shell, XtNpopupCallback, place_popup,
 	    (XtPointer)CenterP);
     XtAddCallback(idle_shell, XtNpopupCallback, idle_popup_callback, NULL);
+    XtOverrideTranslations(idle_shell, common_translations(true));
 
     /* Create the form within the shell. */
     idle_dialog = XtVaCreateManagedWidget(

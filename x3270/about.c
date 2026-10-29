@@ -70,7 +70,7 @@ static void
 saw_about(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-	XtPopdown(about_shell);
+    XtPopdown(about_shell);
 }
 
 /* Called when the about popup is popped down */
@@ -78,8 +78,8 @@ static void
 destroy_about(Widget w _is_unused, XtPointer client_data _is_unused,
 	XtPointer call_data _is_unused)
 {
-	XtDestroyWidget(about_shell);
-	about_shell = NULL;
+    XtDestroyWidget(about_shell);
+    about_shell = NULL;
 }
 
 /* Return a time difference in English */
@@ -111,64 +111,64 @@ hms(time_t ts)
 		sc, (sc == 1)?
 		    get_message("second"): get_message("seconds"));
     } else {
-	    return txAsprintf("%ld %s",
+	return txAsprintf("%ld %s",
 		sc, (sc == 1)?
 		    get_message("second"): get_message("seconds"));
     }
 }
 
 #define MAKE_SMALL(label, n) { \
-	w_prev = w; \
-	w = XtVaCreateManagedWidget( \
-	    ObjSmallLabel, labelWidgetClass, about_form, \
-	    XtNborderWidth, 0, \
-	    XtNlabel, label, \
-	    XtNfromVert, w, \
-	    XtNleft, XtChainLeft, \
-	    XtNvertDistance, rescale(n), \
-	    NULL); \
-	vd = n; \
-	}
+    w_prev = w; \
+    w = XtVaCreateManagedWidget( \
+	ObjSmallLabel, labelWidgetClass, about_form, \
+	XtNborderWidth, 0, \
+	XtNlabel, label, \
+	XtNfromVert, w, \
+	XtNleft, XtChainLeft, \
+	XtNvertDistance, rescale(n), \
+	NULL); \
+    vd = n; \
+    }
 
 #define MAKE_LABEL(label, n) { \
-	w_prev = w; \
-	w = XtVaCreateManagedWidget( \
-	    ObjNameLabel, labelWidgetClass, about_form, \
-	    XtNborderWidth, 0, \
-	    XtNlabel, label, \
-	    XtNfromVert, w, \
-	    XtNfromHoriz, left_anchor, \
-	    XtNleft, XtChainLeft, \
-	    XtNvertDistance, rescale(n), \
-	    NULL); \
-	vd = n; \
-	}
+    w_prev = w; \
+    w = XtVaCreateManagedWidget( \
+	ObjNameLabel, labelWidgetClass, about_form, \
+	XtNborderWidth, 0, \
+	XtNlabel, label, \
+	XtNfromVert, w, \
+	XtNfromHoriz, left_anchor, \
+	XtNleft, XtChainLeft, \
+	XtNvertDistance, rescale(n), \
+	NULL); \
+    vd = n; \
+    }
 
 #define MAKE_VALUE(label) { \
-	v = XtVaCreateManagedWidget( \
-	    ObjDataLabel, labelWidgetClass, about_form, \
-	    XtNborderWidth, 0, \
-	    XtNlabel, label, \
-	    XtNfromVert, w_prev, \
-	    XtNfromHoriz, w, \
-	    XtNhorizDistance, 0, \
-	    XtNvertDistance, rescale(vd), \
-	    XtNleft, XtChainLeft, \
-	    NULL); \
-	}
+    v = XtVaCreateManagedWidget( \
+	ObjDataLabel, labelWidgetClass, about_form, \
+	XtNborderWidth, 0, \
+	XtNlabel, label, \
+	XtNfromVert, w_prev, \
+	XtNfromHoriz, w, \
+	XtNhorizDistance, 0, \
+	XtNvertDistance, rescale(vd), \
+	XtNleft, XtChainLeft, \
+	NULL); \
+    }
 
 #define MAKE_LABEL2(label) { \
-	w = XtVaCreateManagedWidget( \
-	    ObjNameLabel, labelWidgetClass, about_form, \
-	    XtNborderWidth, 0, \
-	    XtNlabel, label, \
-	    XtNfromVert, w_prev, \
-	    XtNfromHoriz, v, \
-	    XtNhorizDistance, 0, \
-	    XtNvertDistance, rescale(vd), \
-	    XtNleft, XtChainLeft, \
-	    NULL); \
-	}
+    w = XtVaCreateManagedWidget( \
+	ObjNameLabel, labelWidgetClass, about_form, \
+	XtNborderWidth, 0, \
+	XtNlabel, label, \
+	XtNfromVert, w_prev, \
+	XtNfromHoriz, v, \
+	XtNhorizDistance, 0, \
+	XtNvertDistance, rescale(vd), \
+	XtNleft, XtChainLeft, \
+	NULL); \
+    }
 
 static void ignore_vd(int vd _is_unused)
 {
@@ -182,118 +182,119 @@ static void ignore_w_prev(Widget w_prev _is_unused)
 void
 popup_about_copyright(void)
 {
-	Widget w = NULL, w_prev = NULL;
-	Widget left_anchor = NULL;
-	int vd = 4;
-	static bool catted = false;
-	static char *s1 = NULL;
-	static char *s2 = NULL;
-	static char *s1a =
+    Widget w = NULL, w_prev = NULL;
+    Widget left_anchor = NULL;
+    int vd = 4;
+    static bool catted = false;
+    static char *s1 = NULL;
+    static char *s2 = NULL;
+    static char *s1a =
 "* Redistributions of source code must retain the above copyright\n\
 notice, this list of conditions and the following disclaimer.\n\
 * Redistributions in binary form must reproduce the above copyright\n\
 notice, this list of conditions and the following disclaimer in the\n";
-	static char *s1b =
+    static char *s1b =
 "documentation and/or other materials provided with the distribution.\n\
 * Neither the names of Paul Mattes, Don Russell, Dick Altenbern,\n\
 Jeff Sparkes, GTRC nor their contributors may be used to endorse or\n\
 promote products derived from this software without specific prior\n\
 written permission.";
-	static char *s2a =
+    static char *s2a =
 "THIS SOFTWARE IS PROVIDED BY PAUL MATTES, DON RUSSELL, DICK ALTENBERN,\n\
 JEFF SPARKES AND GTRC \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES,\n\
 INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY\n\
 AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL PAUL\n\
 MATTES, DON RUSSELL, DICK ALTENBERN, JEFF SPARKES OR GTRC BE LIABLE FOR ANY\n\
 DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n";
-	static char *s2b =
+    static char *s2b =
 "(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\n\
 SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\n\
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n\
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\n\
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH\n\
 DAMAGE.";
-	static char *line1 = NULL;
+    static char *line1 = NULL;
 
-	if (!catted) {
-	    /* Make up for the ANSI C listerl string length limit. */
-	    s1 = Malloc(strlen(s1a) + strlen(s1b) + 1);
-	    strcpy(s1, s1a);
-	    strcat(s1, s1b);
-	    s2 = Malloc(strlen(s2a) + strlen(s2b) + 1);
-	    strcpy(s2, s2a);
-	    strcat(s2, s2b);
-	    catted = true;
-	}
+    if (!catted) {
+	/* Make up for the ANSI C listerl string length limit. */
+	s1 = Malloc(strlen(s1a) + strlen(s1b) + 1);
+	strcpy(s1, s1a);
+	strcat(s1, s1b);
+	s2 = Malloc(strlen(s2a) + strlen(s2b) + 1);
+	strcpy(s2, s2a);
+	strcat(s2, s2b);
+	catted = true;
+    }
 
-	/* Create the popup */
+    /* Create the popup */
 
-	about_shell = XtVaCreatePopupShell(
-	    "aboutCopyrightPopup", transientShellWidgetClass, toplevel,
-	    NULL);
-	XtAddCallback(about_shell, XtNpopupCallback, place_popup,
-	    (XtPointer) CenterP);
-	XtAddCallback(about_shell, XtNpopdownCallback, destroy_about,
-	    NULL);
+    about_shell = XtVaCreatePopupShell(
+	"aboutCopyrightPopup", transientShellWidgetClass, toplevel,
+	NULL);
+    XtAddCallback(about_shell, XtNpopupCallback, place_popup,
+	(XtPointer) CenterP);
+    XtAddCallback(about_shell, XtNpopdownCallback, destroy_about,
+	NULL);
+    XtOverrideTranslations(about_shell, common_translations(true));
 
-	/* Create a form in the popup */
+    /* Create a form in the popup */
 
-	about_form = XtVaCreateManagedWidget(
-	    ObjDialog, formWidgetClass, about_shell,
-	    NULL);
+    about_form = XtVaCreateManagedWidget(
+	ObjDialog, formWidgetClass, about_shell,
+	NULL);
 
-	/* Pretty picture */
+    /* Pretty picture */
 
-	left_anchor = XtVaCreateManagedWidget(
-	    "icon", labelWidgetClass, about_form,
-	    XtNborderWidth, 0,
-	    XtNbitmap, x3270_icon,
-	    XtNfromVert, w,
-	    XtNleft, XtChainLeft,
-	    NULL);
+    left_anchor = XtVaCreateManagedWidget(
+	"icon", labelWidgetClass, about_form,
+	XtNborderWidth, 0,
+	XtNbitmap, x3270_icon,
+	XtNfromVert, w,
+	XtNleft, XtChainLeft,
+	NULL);
 
-	/* Miscellany */
+    /* Miscellany */
 
-	MAKE_LABEL(build, 4);
+    MAKE_LABEL(build, 4);
 
-	/* Everything else at the left margin under the bitmap */
-	w = left_anchor;
-	left_anchor = NULL;
+    /* Everything else at the left margin under the bitmap */
+    w = left_anchor;
+    left_anchor = NULL;
 
-	if (line1 == NULL) {
-	    line1 = Asprintf(
+    if (line1 == NULL) {
+	line1 = Asprintf(
 "Copyright \251 1993-%s, Paul Mattes.\n\
 Copyright \251 2004-2005, Don Russell.\n\
 Copyright \251 1995, Dick Altenbern.\n\
 Copyright \251 1990, Jeff Sparkes.\n\
 Copyright \251 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA 30332.\n\
 All rights reserved.", cyear);
-	}
-	MAKE_SMALL(line1, 4);
-	MAKE_SMALL(
+    }
+    MAKE_SMALL(line1, 4);
+    MAKE_SMALL(
 "Redistribution and use in source and binary forms, with or without\n\
 modification, are permitted provided that the following conditions\n\
 are met:", 4);
-	MAKE_SMALL(s1, 4);
-	MAKE_SMALL(s2, 4);
+    MAKE_SMALL(s1, 4);
+    MAKE_SMALL(s2, 4);
 
-	/* Add "OK" button at the lower left */
+    /* Add "OK" button at the lower left */
 
-	w = XtVaCreateManagedWidget(
-	    ObjConfirmButton, commandWidgetClass, about_form,
-	    XtNfromVert, w,
-	    XtNleft, XtChainLeft,
-	    XtNbottom, XtChainBottom,
-	    NULL);
-	XtAddCallback(w, XtNcallback, saw_about, 0);
+    w = XtVaCreateManagedWidget(
+	ObjConfirmButton, commandWidgetClass, about_form,
+	XtNfromVert, w,
+	XtNleft, XtChainLeft,
+	XtNbottom, XtChainBottom,
+	NULL);
+    XtAddCallback(w, XtNcallback, saw_about, 0);
 
-	/* Pop it up */
+    /* Pop it up */
 
-	popup_popup(about_shell, XtGrabExclusive);
+    popup_popup(about_shell, XtGrabExclusive);
 
-	/* Make gcc happy. */
-	ignore_vd(vd);
-	ignore_w_prev(w_prev);
+    /* Make gcc happy. */
+    ignore_vd(vd);
+    ignore_w_prev(w_prev);
 }
 
 /* Called when the "About x3270->Configuration" button is pressed */
@@ -315,6 +316,7 @@ popup_about_config(void)
 	(XtPointer) CenterP);
     XtAddCallback(about_shell, XtNpopdownCallback, destroy_about,
 	NULL);
+    XtOverrideTranslations(about_shell, common_translations(true));
 
     /* Create a form in the popup */
     about_form = XtVaCreateManagedWidget(
@@ -514,6 +516,7 @@ popup_about_status(void)
 	(XtPointer) CenterP);
     XtAddCallback(about_shell, XtNpopdownCallback, destroy_about,
 	NULL);
+    XtOverrideTranslations(about_shell, common_translations(true));
 
     /* Create a form in the popup */
     about_form = XtVaCreateManagedWidget(

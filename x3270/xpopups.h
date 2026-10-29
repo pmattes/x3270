@@ -43,13 +43,14 @@ extern enum placement *InsideRightP;
 /* form input editing enumeration */
 enum form_type { FORM_NO_WHITE, FORM_NO_CC, FORM_AS_IS };
 
+XtTranslations common_translations(bool include_wm_protocols);
 Widget create_form_popup(const char *name, XtCallbackProc callback,
 	XtCallbackProc callback2, enum form_type form_type);
 void error_init(void);
 void error_popup_init(void);
 bool error_popup_visible(void);
 void error_popup_resume(void);
-extern Widget error_shell(void);
+Widget error_shell(void);
 void info_popup_init(void);
 void PA_confirm_xaction(Widget w, XEvent *event, String *params,
 	Cardinal *num_params);
@@ -66,4 +67,4 @@ void add_error_popdown_callback(void (*callback)(void));
 void popups_register(void);
 void popup_a_timed_info(int timeout_ms, const char *format, ...);
 void unplace_popup(Widget w);
-extern void popup_a_transient_error(const char *buf, Widget w);
+void popup_a_transient_error(const char *buf, Widget w);
